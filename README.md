@@ -1,55 +1,80 @@
 # git-superpowers
 
-Claude Code skills for intelligent Git workflows. Topic-aware commits, smart rebasing, multi-repo overview, pre-push auditing, and branch inspection — all powered by AI.
+Claude Code Skills fuer intelligente Git-Workflows. Topic-basierte Commits, smartes Rebasing, Multi-Repo Ueberblick, Pre-Push Auditing, Conflict-Vorhersage und mehr — alles KI-gestuetzt.
 
-## The Problem
+## Das Problem
 
-Teams working in feature branches deal with:
-- **Mixed changes** — multiple features and bugfixes in the same branch, sometimes in the same file
-- **Merge conflict chaos** — rebasing from main creates conflicts in files with changes from different topics
-- **Pushing unfinished work** — half-done features accidentally included in commits
-- **No overview** — hard to see where all repos stand and what others are doing
-- **Preventable mistakes** — debug statements, forgotten conflict markers, secrets in diffs
+Teams die in Feature-Branches arbeiten kennen das:
+- **Vermischte Aenderungen** — mehrere Features und Bugfixes in derselben Branch, teilweise in denselben Dateien
+- **Merge-Conflict-Chaos** — beim Rebase von main entstehen Conflicts in Dateien die Aenderungen aus verschiedenen Topics enthalten
+- **Unfertiges wird mitgepusht** — halbfertige Features landen versehentlich im Commit
+- **Kein Ueberblick** — schwer zu sehen wo alle Repos stehen und was andere Branches machen
+- **Vermeidbare Fehler** — Debug-Statements, vergessene Conflict-Marker, Secrets im Diff
+- **Schwer nachvollziehbar** — wer hat was wann geaendert und warum
 
 ## Skills
 
-### `/smart-commit` — Topic-Based Selective Commits
-Groups your changes by topic using AI analysis. When one file contains changes from multiple topics (a bugfix AND a feature), it splits them at hunk level so each commit is clean.
+### Kern-Workflows
 
-### `/smart-sync` — Intelligent Rebase
-Rebases your branch onto main with topic-aware conflict resolution. Instead of raw conflict diffs, you see which topic each conflict belongs to and get guided resolution.
+| Skill | Beschreibung |
+|---|---|
+| `/smart-commit` | Gruppiert Aenderungen nach Topics per KI-Analyse. Wenn eine Datei Aenderungen aus verschiedenen Topics enthaelt (Bugfix UND Feature), wird auf Hunk-Ebene gesplittet — jeder Commit ist sauber und fokussiert. |
+| `/smart-sync` | Rebased deine Branch auf main mit Topic-basierter Conflict-Resolution. Statt roher Conflict-Diffs siehst du welches Topic jeder Conflict betrifft und wirst durch die Loesung gefuehrt. |
+| `/safe-push` | Pre-Push Audit mit automatischen Fixes. Scannt ausgehende Commits auf Debug-Statements, Conflict-Marker, Secrets, unvollstaendige Features und grosse Dateien. Sagt Conflicts vorher und fixt Probleme direkt — nicht nur Warnungen. |
 
-### `/repo-overview` — Multi-Repo Dashboard
-Scans all your repos and shows a dashboard: which branches are behind main, where you have uncommitted work, last commit dates. Then offers to take action.
+### Ueberblick & Analyse
 
-### `/safe-push` — Pre-Push Audit with Auto-Fix
-Scans outgoing commits for debug statements, conflict markers, secrets, incomplete features, and large files. Shows issues and fixes them directly — not just warnings.
+| Skill | Beschreibung |
+|---|---|
+| `/repo-overview` | Multi-Repo Dashboard: zeigt alle Repos mit Branch-Status, Behind/Ahead, uncommitted Changes und letztem Commit. Bietet direkte Aktionen an. |
+| `/branch-inspect` | Zeigt was auf anderen Branches passiert — wer hat was committed, welche Dateien ueberschneiden sich, wo wird es Conflicts geben. |
+| `/cross-compare` | Vergleicht wie ein bestimmtes Modul/eine Datei ueber mehrere Branches hinweg aussieht. Zeigt Unterschiede und potenzielle Kollisionen. |
+| `/conflict-simulator` | Sagt Merge-Conflicts vorher BEVOR sie passieren — ohne den Rebase tatsaechlich auszufuehren. Zeigt Schweregrad und empfiehlt wann man syncen sollte. |
 
-### `/branch-inspect` — Branch Comparison & Conflict Prediction
-See what other branches are doing, who committed what, and predict merge conflicts before they happen.
+### Code-Qualitaet
+
+| Skill | Beschreibung |
+|---|---|
+| `/diff-review` | KI-Code-Review deiner Aenderungen vor dem Commit. Findet Bugs, Logic-Fehler, Security-Issues und fehlende Edge Cases — kein Linter, sondern ein Senior Dev Review. |
+| `/commit-split` | Teilt einen bestehenden Commit nachtraeglich in mehrere fokussierte Commits auf. Erkennt Topics automatisch und fuehrt durch den Split. |
+
+### Branch-Operationen
+
+| Skill | Beschreibung |
+|---|---|
+| `/cherry-pick` | Holt gezielt einzelne Commits aus anderen Branches. Zeigt vorher was kommt, prueft auf Duplikate und Conflicts. |
+| `/selective-merge` | Bringt einzelne Dateien (nicht ganze Commits) aus einer anderen Branch. Wahlweise komplett ersetzen oder nur bestimmte Aenderungen uebernehmen. |
+| `/hotfix` | Notfall-Workflow fuer Produktions-Bugs. Stashed aktuelle Arbeit, erstellt Hotfix-Branch von main, fuehrt durch Fix + Audit + PR, und kehrt zur vorherigen Branch zurueck. |
+
+### History & Recovery
+
+| Skill | Beschreibung |
+|---|---|
+| `/git-history` | Deep Dive in die Geschichte einer Datei oder Funktion. Wer hat was wann geaendert und warum — als lesbare Zusammenfassung, nicht als rohe Git-Ausgabe. |
+| `/git-undo` | Recovery wenn was schiefgeht. Falscher Branch, versehentlich gepusht, Commit rueckgaengig machen — zeigt immer die sicherste Option zuerst. |
+| `/pr-prep` | Bereitet einen sauberen Pull Request vor. Prueft Status, fuehrt Audit durch, generiert PR-Beschreibung aus Commits, erstellt PR via `gh`. |
 
 ## Installation
 
 ```bash
-# Clone the repo
 git clone https://github.com/Fxbio04/git-superpowers.git ~/.claude/plugins/git-superpowers
 ```
 
-Then register in Claude Code — add the plugin path to your settings.
+Dann in den Claude Code Settings den Plugin-Pfad registrieren. Fertig — alle 15 Skills sind sofort verfuegbar.
 
-## Optional Configuration
+## Optionale Konfiguration
 
-No configuration required — works out of the box in any git repo.
+Funktioniert ohne jede Config in jedem Git-Repo.
 
-For custom topic mappings, create a `.claude-git.yml` in your repo root:
+Wer will, kann eine `.claude-git.yml` im Repo-Root anlegen fuer custom Topic-Mappings:
 
 ```yaml
-# Optional: directories to scan for repo-overview
+# Optional: Verzeichnisse die repo-overview scannen soll
 scan_dirs:
   - ~/source/
   - ~/projects/
 
-# Optional: explicit topic mappings for smart-commit
+# Optional: Explizite Topic-Zuordnungen fuer smart-commit
 topics:
   amazon:
     paths: ["src/amazon/", "departments/amazon"]
@@ -57,39 +82,50 @@ topics:
     paths: ["src/shopify/", "departments/shopifySync"]
 ```
 
-## Architecture
+## Architektur
 
 ```
 git-superpowers/
 ├── skills/
-│   ├── smart-commit/SKILL.md
-│   ├── smart-sync/SKILL.md
-│   ├── repo-overview/SKILL.md
-│   ├── safe-push/SKILL.md
-│   └── branch-inspect/SKILL.md
+│   ├── smart-commit/          # Topic-basiert committen
+│   ├── smart-sync/            # Intelligenter Rebase
+│   ├── safe-push/             # Pre-Push Audit + Conflict-Prediction
+│   ├── repo-overview/         # Multi-Repo Dashboard
+│   ├── branch-inspect/        # Branch-Analyse
+│   ├── cross-compare/         # Cross-Branch Vergleich
+│   ├── conflict-simulator/    # Conflict-Vorhersage
+│   ├── diff-review/           # KI-Code-Review
+│   ├── commit-split/          # Commits aufteilen
+│   ├── cherry-pick/           # Commits aus anderen Branches
+│   ├── selective-merge/       # Dateien aus anderen Branches
+│   ├── hotfix/                # Notfall-Workflow
+│   ├── git-history/           # File/Function History
+│   ├── git-undo/              # Recovery bei Fehlern
+│   └── pr-prep/               # PR vorbereiten
 ├── references/
-│   ├── topic-detection.md      # AI topic recognition strategy
-│   ├── hunk-analysis.md        # Hunk-level splitting guide
-│   ├── conflict-resolution.md  # Conflict patterns & strategies
-│   ├── git-safety.md           # Shared safety rules
-│   └── branch-history.md       # Git history commands reference
-└── docs/specs/                 # Design documentation
+│   ├── topic-detection.md     # KI-Topic-Erkennung
+│   ├── hunk-analysis.md       # Hunk-Level Splitting
+│   ├── conflict-resolution.md # Conflict-Strategien
+│   ├── git-safety.md          # Shared Safety-Regeln
+│   └── branch-history.md      # Git-History Commands
+└── docs/specs/                # Design-Dokumentation
 ```
 
-**Pure skills, no dependencies.** Everything runs through Claude's natural abilities — reading diffs, understanding code, executing git commands. No scripts, no MCP servers, no npm packages to install.
+**Pure Skills, keine Dependencies.** Alles laeuft ueber Claudes natuerliche Faehigkeiten — Diffs lesen, Code verstehen, Git-Commands ausfuehren. Keine Scripts, keine MCP-Server, kein `npm install`.
 
-**Token-efficient by design.** Skills use `git diff --stat` and `--name-only` for overviews, only reading full diffs when semantic analysis is needed.
+**Token-effizient by Design.** Skills nutzen `git diff --stat` und `--name-only` fuer Ueberblicke, volle Diffs werden nur gelesen wenn semantische Analyse noetig ist.
 
-## Safety
+## Sicherheit
 
-All skills follow these rules:
-- Never `git add .` or `git add -A` — always stage specific files
-- Never `--force` push — always `--force-with-lease`
-- Always show what will happen before doing it
-- Always ask for confirmation before destructive operations
-- Scan for secrets before every push
-- Fix issues directly instead of just warning
+Alle Skills folgen diesen Regeln:
+- Nie `git add .` oder `git add -A` — immer spezifische Dateien stagen
+- Nie `--force` Push — immer `--force-with-lease`
+- Immer zeigen was passieren wird bevor es passiert
+- Immer bestaetigen lassen vor destruktiven Operationen
+- Vor jedem Push auf Secrets scannen
+- Probleme direkt fixen statt nur warnen
+- Bei Unsicherheit nachfragen statt still kaputtmachen
 
-## License
+## Lizenz
 
 MIT

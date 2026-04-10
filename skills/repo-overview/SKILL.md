@@ -1,6 +1,6 @@
 ---
 name: repo-overview
-description: Multi-repo dashboard showing the status of all your git repositories at a glance. Use when the user wants to see the state of their repos, check which branches are behind, get an overview of all projects, find uncommitted work across repos, or says things like "show me all repos", "welche repos sind behind", "repo status", "wo steh ich ueberall", "overview of my projects", or "was hab ich noch offen". Also triggers on /repo-overview.
+description: Multi-repo dashboard showing the status of all your git repositories at a glance. Use when the user wants to see the state of their repos, check which branches are behind, get an overview of all projects, find uncommitted work across repos, or says things like "show me all repos", "welche repos sind behind", "repo status", "wo steh ich überall", "overview of my projects", or "was hab ich noch offen". Also triggers on /repo-overview.
 ---
 
 # Repo Overview

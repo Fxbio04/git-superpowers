@@ -88,6 +88,8 @@ Show this to the user. Ask: "This is what will be committed. Look correct?"
 
 If the user spots something wrong, `git reset HEAD <file>` for the problematic file and redo.
 
+**Tip:** Run `/diff-review` before committing to catch bugs and logic errors in your changes.
+
 ### Step 7: Commit Message
 
 Propose a commit message using Conventional Commits:

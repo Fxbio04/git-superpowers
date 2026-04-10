@@ -33,6 +33,8 @@ Remote branches (most recent first):
 Pick from which branch?
 ```
 
+**Tip:** Use `/branch-inspect` first to see what's on other branches and find the right commits.
+
 ### Step 2: Show Available Commits
 
 List commits on that branch that are not yet in main — those are the candidates:

@@ -1,6 +1,6 @@
 ---
 name: smart-sync
-description: Rebase your branch onto main with intelligent, topic-aware conflict resolution. Use when the user wants to sync their branch, pull from main, update from main, rebase, get the latest changes, resolve merge conflicts, or says things like "sync my branch", "rebase from main", "ich muss den neusten Stand ziehen", "main in meine branch holen", "merge conflicts loesen", or "branch aktualisieren". Also triggers on /smart-sync. Use this instead of raw git rebase — it analyzes conflicts by topic and guides resolution.
+description: Rebase your branch onto main with intelligent, topic-aware conflict resolution. Use when the user wants to sync their branch, pull from main, update from main, rebase, get the latest changes, resolve merge conflicts, or says things like "sync my branch", "rebase from main", "ich muss den neusten Stand ziehen", "main in meine branch holen", "merge conflicts lösen", or "branch aktualisieren". Also triggers on /smart-sync. Use this instead of raw git rebase — it analyzes conflicts by topic and guides resolution.
 ---
 
 # Smart Sync
@@ -70,6 +70,8 @@ comm -12 <(sort /tmp/main-changes.txt) <(sort /tmp/branch-changes.txt)
 ```
 
 If there's overlap, warn: "These files were changed in both main and your branch — conflicts are likely: ..."
+
+**Tip:** Run `/conflict-simulator` first to preview conflicts without starting the rebase.
 
 ### Step 3: Rebase
 

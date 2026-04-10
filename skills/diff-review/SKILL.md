@@ -183,3 +183,7 @@ If more issues are visible in the updated diff that weren't there before (fixes 
 - Never create a commit in this skill — the user commits when they are ready
 - If the diff has no real issues, say so confidently — "no issues found" is a valid and useful outcome
 - Apply fixes directly to files — do not just describe them
+
+## Next Steps
+
+After reviewing, use `/smart-commit` to commit your changes or `/safe-push` to push them.

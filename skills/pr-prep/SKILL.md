@@ -103,7 +103,7 @@ CURRENT=$(git branch --show-current)
 
 # Try the merge in a detached HEAD state
 git checkout --detach origin/main --quiet
-git merge --no-commit --no-ff origin/$CURRENT --quiet 2>&1
+git merge --no-commit --no-ff $CURRENT --quiet 2>&1
 MERGE_RESULT=$?
 
 # Clean up regardless of outcome

@@ -86,8 +86,8 @@ Find branches that both modified the target path and check how their changes ove
 ```bash
 # Lines changed in branch A vs branch B (not vs main)
 comm -12 \
-  <(git diff --unified=0 origin/main...origin/<branch-A> -- <path> | grep '^@@' | grep -oP 'l\+\K[0-9]+' | sort) \
-  <(git diff --unified=0 origin/main...origin/<branch-B> -- <path> | grep '^@@' | grep -oP 'l\+\K[0-9]+' | sort)
+  <(git diff --unified=0 origin/main...origin/<branch-A> -- <path> | grep '^@@' | grep -oE '\+[0-9]+' | tr -d '+' | sort) \
+  <(git diff --unified=0 origin/main...origin/<branch-B> -- <path> | grep '^@@' | grep -oE '\+[0-9]+' | tr -d '+' | sort)
 ```
 
 Report collision risk for each pair:

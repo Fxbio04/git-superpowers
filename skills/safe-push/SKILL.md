@@ -41,9 +41,10 @@ Before auditing code quality, check if your branch will have conflicts when reba
 
 ```bash
 # Quick overlap check: files changed in both your branch and main
+MERGE_BASE=$(git merge-base HEAD origin/main)
 comm -12 \
-  <(git diff --name-only origin/main..HEAD | sort) \
-  <(git diff --name-only HEAD..origin/main | sort)
+  <(git diff --name-only $MERGE_BASE..HEAD | sort) \
+  <(git diff --name-only $MERGE_BASE..origin/main | sort)
 ```
 
 If overlapping files exist, warn:

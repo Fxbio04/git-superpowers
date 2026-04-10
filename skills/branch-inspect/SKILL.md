@@ -100,6 +100,8 @@ For each overlapping file, read both sides' diffs to assess conflict risk:
 - **MEDIUM**: Changes near each other, might conflict
 - **HIGH**: Changes on the same lines, will definitely conflict
 
+For a deeper conflict simulation, run `/conflict-simulator`. To see actual code differences, use `/cross-compare`.
+
 ### Step 4: Proactive Recommendations
 
 Based on the analysis, suggest actions:

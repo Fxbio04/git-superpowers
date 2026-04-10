@@ -1,25 +1,25 @@
 # git-superpowers — Design Spec
 
-> Claude Code Skill-Paket fuer intelligente Git-Workflows mit KI-gestuetzter Topic-Erkennung, Hunk-Level Splitting und proaktiver Fehlervermeidung.
+> Claude Code Skill-Paket für intelligente Git-Workflows mit KI-gestützter Topic-Erkennung, Hunk-Level Splitting und proaktiver Fehlervermeidung.
 
 ## Motivation
 
-Teams die in Feature-Branches arbeiten kaempfen mit:
-- **Gemischte Aenderungen**: Mehrere Features/Bugfixes in derselben Branch, teilweise in denselben Dateien
-- **Merge-Conflict-Chaos**: Beim Rebase von main kommen Conflicts in Dateien die Aenderungen aus verschiedenen Topics enthalten (z.B. Amazon-Imports + Bugfix in einer Datei)
+Teams die in Feature-Branches arbeiten kämpfen mit:
+- **Gemischte Änderungen**: Mehrere Features/Bugfixes in derselben Branch, teilweise in denselben Dateien
+- **Merge-Conflict-Chaos**: Beim Rebase von main kommen Conflicts in Dateien die Änderungen aus verschiedenen Topics enthalten (z.B. Amazon-Imports + Bugfix in einer Datei)
 - **Unfertiges wird mitgepusht**: Beim Pushen landen halbfertige Features mit im Commit
-- **Fehlender Ueberblick**: Kein schneller Weg zu sehen wo alle Repos stehen und was andere Branches machen
+- **Fehlender Überblick**: Kein schneller Weg zu sehen wo alle Repos stehen und was andere Branches machen
 - **Git-Fehler**: console.log im Push, vergessene Conflict-Marker, Secrets im Diff
 
 ## Architektur
 
 ### Ansatz: Pure Skills mit Smart-Querying
 
-Keine Scripts, keine MCP-Server, keine Dependencies. Alles liegt in SKILL.md Dateien die Claude's natuerliche Faehigkeiten (Diffs lesen, Code verstehen) nutzen.
+Keine Scripts, keine MCP-Server, keine Dependencies. Alles liegt in SKILL.md Dateien die Claude's natürliche Fähigkeiten (Diffs lesen, Code verstehen) nutzen.
 
 **Token-Effizienz durch gezieltes Querying:**
-- `git diff --stat` und `--name-only` fuer Ueberblick (wenige Zeilen)
-- Nur bei Bedarf: `git diff <datei>` fuer einzelne Dateien
+- `git diff --stat` und `--name-only` für Überblick (wenige Zeilen)
+- Nur bei Bedarf: `git diff <datei>` für einzelne Dateien
 - Nie den gesamten Diff in den Kontext laden
 
 ### Repo-Struktur
@@ -48,7 +48,7 @@ git-superpowers/
 git clone https://github.com/Fxbio04/git-superpowers.git ~/.claude/plugins/git-superpowers
 ```
 
-Plugin-Pfad in Claude Code Settings registrieren. Keine weitere Config noetig.
+Plugin-Pfad in Claude Code Settings registrieren. Keine weitere Config nötig.
 
 ### Optionale Config: `.claude-git.yml`
 
@@ -74,17 +74,17 @@ Ohne Config erkennt Claude Topics rein KI-basiert aus Pfaden und Diff-Inhalten.
 
 ### 1. Smart Commit (`/smart-commit`)
 
-Selektives Committen nach Topics mit Hunk-Level Granularitaet.
+Selektives Committen nach Topics mit Hunk-Level Granularität.
 
 #### Ablauf
 
 1. **Preflight**
-   - Pruefen ob Git-Repo, aktuelle Branch zeigen
+   - Prüfen ob Git-Repo, aktuelle Branch zeigen
    - `git status` (nicht `-uall`)
-   - Falls keine Aenderungen: stoppen
+   - Falls keine Änderungen: stoppen
 
 2. **Schnelle Analyse (Token-effizient)**
-   - `git diff --stat` + `git diff --name-only` fuer Ueberblick
+   - `git diff --stat` + `git diff --name-only` für Überblick
    - Keine vollen Diffs in den Kontext laden
 
 3. **Topic-Erkennung**
@@ -97,10 +97,10 @@ Selektives Committen nach Topics mit Hunk-Level Granularitaet.
      - Repo B: erkennt "API", "Frontend", "Auth"
 
 4. **Gemischte Dateien erkennen**
-   - Wenn eine Datei Hunks von verschiedenen Topics enthaelt → ⚡-Markierung
-   - Nur fuer diese Dateien wird `git diff <datei>` gelesen
+   - Wenn eine Datei Hunks von verschiedenen Topics enthält → ⚡-Markierung
+   - Nur für diese Dateien wird `git diff <datei>` gelesen
 
-5. **Uebersicht anzeigen**
+5. **Übersicht anzeigen**
    ```
    Topics erkannt:
 
@@ -117,29 +117,29 @@ Selektives Committen nach Topics mit Hunk-Level Granularitaet.
    [3] Dependency Updates (1 Datei)
        M  package.json
 
-   ⚡ = Datei enthaelt Aenderungen aus mehreren Topics
+   ⚡ = Datei enthält Änderungen aus mehreren Topics
    ```
 
-6. **User waehlt Topics** — per AskUserQuestion: "1,3" oder "alle"
+6. **User wählt Topics** — per AskUserQuestion: "1,3" oder "alle"
 
 7. **Hunk-Level Splitting** — Bei ⚡-Dateien: Claude kann `git add -p` nicht interaktiv nutzen. Stattdessen:
-   - Datei lesen, die Aenderungen des NICHT-gewaehlten Topics temporaer zuruecknehmen
-   - `git add <datei>` (jetzt nur mit den gewaehlten Aenderungen)
-   - Datei wiederherstellen mit allen Aenderungen via `git checkout -- <datei>` NICHT ausfuehren — stattdessen die zurueckgenommenen Aenderungen als unstaged belassen
-   - Alternativ: `git diff <datei>` in einzelne Hunks splitten, gewaehlte Hunks als Patch via `echo '...' | git apply --cached` anwenden
+   - Datei lesen, die Änderungen des NICHT-gewählten Topics temporär zurücknehmen
+   - `git add <datei>` (jetzt nur mit den gewählten Änderungen)
+   - Datei wiederherstellen mit allen Änderungen via `git checkout -- <datei>` NICHT ausführen — stattdessen die zurückgenommenen Änderungen als unstaged belassen
+   - Alternativ: `git diff <datei>` in einzelne Hunks splitten, gewählte Hunks als Patch via `echo '...' | git apply --cached` anwenden
 
-8. **Staged Review** — `git diff --cached --stat` zeigen zur Bestaetigung
+8. **Staged Review** — `git diff --cached --stat` zeigen zur Bestätigung
 
-9. **Commit-Message** — Conventional Commits, Claude schlaegt vor, User bestaetigt per AskUserQuestion
+9. **Commit-Message** — Conventional Commits, Claude schlägt vor, User bestätigt per AskUserQuestion
 
 10. **Optional Push** — Fragt ob direkt gepusht werden soll
 
-11. **Loop** — Verbleibende Aenderungen zeigen, fragen ob weitere Topics committet werden sollen
+11. **Loop** — Verbleibende Änderungen zeigen, fragen ob weitere Topics committet werden sollen
 
 #### Regeln
 - NIEMALS `git add .` oder `git add -A`
 - IMMER spezifische Dateien/Hunks stagen
-- IMMER Commit-Message dem User zur Bestaetigung zeigen
+- IMMER Commit-Message dem User zur Bestätigung zeigen
 - IMMER `git diff --cached --stat` nach dem Stagen zeigen
 - Bei Pre-Commit Hook Fehler: neuen Commit erstellen, nicht `--amend`
 
@@ -160,7 +160,7 @@ Intelligenter Rebase mit Topic-aware Conflict Resolution.
 2. **Pre-Rebase Analyse**
    - Zeigt: "X Commits von main kommen rein"
    - `git diff --stat HEAD...origin/main` → betroffene Dateien
-   - Warnt wenn Dateien betroffen sind die der User auch geaendert hat
+   - Warnt wenn Dateien betroffen sind die der User auch geändert hat
 
 3. **Rebase starten**
    - `git rebase origin/main`
@@ -173,31 +173,31 @@ Intelligenter Rebase mit Topic-aware Conflict Resolution.
      Merge Conflicts erkannt:
 
      [Bugfix Login] 1 Conflict in src/auth/login.tsx
-       → Dein Fix fuer den Redirect-Bug vs. Refactoring aus main
+       → Dein Fix für den Redirect-Bug vs. Refactoring aus main
 
      [Amazon Feature] 2 Conflicts
        → src/utils/api.ts: Deine Amazon-Imports vs. neue API-Struktur
        → src/routes.tsx: Deine neue Route vs. Route-Refactoring
 
      [Gemischt] 1 Conflict
-       → src/config.ts: Enthaelt Aenderungen fuer Bugfix UND Amazon
+       → src/config.ts: Enthält Änderungen für Bugfix UND Amazon
      ```
 
 5. **Resolution pro Topic**
    - Optionen per AskUserQuestion:
      - **Behalten** — Deine Version (`--theirs` bei Rebase!)
-     - **Main uebernehmen** — Version aus main (`--ours` bei Rebase!)
+     - **Main übernehmen** — Version aus main (`--ours` bei Rebase!)
      - **Manuell** — Claude zeigt Conflict, User entscheidet
-   - **Wichtig**: Bei Rebase ist `--ours`/`--theirs` invertiert gegenueber Merge. Der Skill kommuniziert das klar.
+   - **Wichtig**: Bei Rebase ist `--ours`/`--theirs` invertiert gegenüber Merge. Der Skill kommuniziert das klar.
    - Bei gemischten Conflicts: Hunk-Level Resolution mit Topic-Labels
    - Nach jeder Datei: `git add <datei>` → `git rebase --continue`
    - Jederzeit: `git rebase --abort` als Option
-   - Bei >5 Conflicts: aktiv fragen ob abort sinnvoller waere
+   - Bei >5 Conflicts: aktiv fragen ob abort sinnvoller wäre
 
 6. **Safe Push**
    - `git push --force-with-lease origin <branch>`
-   - Falls fehlschlaegt (jemand hat gepusht): warnen und fragen
-   - `--force` nur mit expliziter User-Bestaetigung
+   - Falls fehlschlägt (jemand hat gepusht): warnen und fragen
+   - `--force` nur mit expliziter User-Bestätigung
 
 7. **Cleanup**
    - Stash poppen falls vorhanden
@@ -214,7 +214,7 @@ Intelligenter Rebase mit Topic-aware Conflict Resolution.
 
 ### 3. Repo Overview (`/repo-overview`)
 
-Multi-Repo Dashboard mit Ueberblick ueber alle Repos.
+Multi-Repo Dashboard mit Überblick über alle Repos.
 
 #### Ablauf
 
@@ -228,7 +228,7 @@ Multi-Repo Dashboard mit Ueberblick ueber alle Repos.
    - `fetch origin --quiet` → aktualisieren
    - `rev-list --count HEAD..origin/main` → Behind main
    - `rev-list --count origin/main..HEAD` → Ahead of main
-   - `status --porcelain` → Uncommitted Changes zaehlen
+   - `status --porcelain` → Uncommitted Changes zählen
    - `log --oneline -3` → Letzte 3 Commits
 
 3. **Dashboard anzeigen:**
@@ -247,7 +247,7 @@ Multi-Repo Dashboard mit Ueberblick ueber alle Repos.
    ```
 
 4. **Aktionen anbieten:**
-   - "Willst du ein Repo syncen?" → Smart Sync ausfuehren
+   - "Willst du ein Repo syncen?" → Smart Sync ausführen
    - "Details zu einem Repo?" → Commits, Changes, diff --stat
    - Kein Batch "sync all" — jeder Sync braucht Aufmerksamkeit
 
@@ -261,19 +261,19 @@ Pre-Push Audit mit aktiven Fixes.
 
 1. **Was geht raus?**
    - `git log --oneline origin/<branch>..HEAD` → Commits
-   - `git diff --stat origin/<branch>..HEAD` → Datei-Uebersicht
+   - `git diff --stat origin/<branch>..HEAD` → Datei-Übersicht
    - Falls nichts: stoppen
 
 2. **Audit-Checks:**
-   - **Unfertige Topics** — Claude erkennt ob zusammengehoerige Aenderungen fehlen
+   - **Unfertige Topics** — Claude erkennt ob zusammengehörige Änderungen fehlen
    - **Debug-Artefakte** — `console.log`, `debugger`, `TODO`, `FIXME`, `HACK`
-   - **Secrets** — Patterns die wie API-Keys, Tokens, Passwoerter aussehen
-   - **Grosse Dateien** — Binaere oder ungewoehnlich grosse Dateien
+   - **Secrets** — Patterns die wie API-Keys, Tokens, Passwörter aussehen
+   - **Große Dateien** — Binäre oder ungewöhnlich große Dateien
    - **Conflict-Marker** — Vergessene `<<<<<<<` / `=======` / `>>>>>>>`
 
 3. **Report + direkte Aktion:**
    ```
-   Safe Push Audit fuer fb → origin/fb
+   Safe Push Audit für fb → origin/fb
 
    3 Commits, 8 Dateien
 
@@ -292,20 +292,20 @@ Pre-Push Audit mit aktiven Fixes.
    Welche Issues soll ich fixen?
    □ [1] console.log entfernen (Zeile 45)
    □ [2] console.log entfernen (Zeile 89)
-   □ [3] ProductChart-Datei zum Commit hinzufuegen
+   □ [3] ProductChart-Datei zum Commit hinzufügen
    □ [4] TODO entfernen / implementieren
    □ Alle fixen
    □ Ignorieren und trotzdem pushen
    ```
 
-4. **Claude fixt ausgewaehlte Issues:**
+4. **Claude fixt ausgewählte Issues:**
    - Entfernt Debug-Artefakte direkt
    - Staged fehlende Dateien nach
    - Bei TODOs: fragt was rein soll oder entfernt Kommentar
    - Erstellt Cleanup-Commit (nie `--amend` auf bereits gepushte Commits)
-   - Zeigt `git diff --cached --stat` zur Bestaetigung
+   - Zeigt `git diff --cached --stat` zur Bestätigung
 
-5. **Push** — `git push origin <branch>`, bei Fehler Loesung anbieten
+5. **Push** — `git push origin <branch>`, bei Fehler Lösung anbieten
 
 ---
 
@@ -328,17 +328,17 @@ Zeigt was andere Branches machen und warnt vor potenziellen Conflicts.
    [4] origin/main  — vor 5 Stunden (merged)
    ```
 
-2. **User waehlt Branch** → Claude zeigt:
+2. **User wählt Branch** → Claude zeigt:
    - `git log --oneline origin/main..origin/<branch>` → Commits seit main
-   - `git diff --stat origin/main..origin/<branch>` → geaenderte Dateien
+   - `git diff --stat origin/main..origin/<branch>` → geänderte Dateien
    - `git shortlog -sn origin/main..origin/<branch>` → wer hat was committed
    - Zusammenfassung: "Bobby arbeitet an Ticket-System und Lager-Bugfixes"
 
 3. **Vergleich mit deiner Branch:**
    ```
-   Ueberschneidungen fb ↔ bb:
+   Überschneidungen fb ↔ bb:
 
-   ⚠️ 3 Dateien in beiden Branches geaendert:
+   ⚠️ 3 Dateien in beiden Branches geändert:
      src/utils/api.ts  — du: Amazon-Imports / bb: Ticket-API
      src/routes.tsx     — du: neue Route / bb: neue Route
      package.json       — du: neue Dep / bb: andere Dep
@@ -348,7 +348,7 @@ Zeigt was andere Branches machen und warnt vor potenziellen Conflicts.
 
 4. **Proaktive Empfehlung:**
    - Erkennt potenzielle Conflicts BEVOR sie passieren
-   - Schlaegt vor: "Bobby's Aenderungen an routes.tsx sind klein — du koenntest deinen Teil jetzt anpassen"
+   - Schlägt vor: "Bobby's Änderungen an routes.tsx sind klein — du könntest deinen Teil jetzt anpassen"
 
 ---
 
@@ -356,8 +356,8 @@ Zeigt was andere Branches machen und warnt vor potenziellen Conflicts.
 
 ### `references/topic-detection.md`
 
-Anleitung fuer KI-basierte Topic-Erkennung:
-- Erst `--stat`/`--name-only` fuer Ueberblick (Token-effizient)
+Anleitung für KI-basierte Topic-Erkennung:
+- Erst `--stat`/`--name-only` für Überblick (Token-effizient)
 - Pfad-Heuristik als erste Gruppierung
 - Nur bei unklaren Dateien: gezielt `git diff <datei>` lesen
 - Semantische Analyse: Imports, Funktionsnamen, Kommentare
@@ -368,7 +368,7 @@ Anleitung fuer KI-basierte Topic-Erkennung:
 
 Hunk-Level Splitting Anleitung:
 - `git add -p` ist interaktiv und kann von Claude nicht direkt genutzt werden
-- Stattdessen: Datei editieren (nicht-gewaehlte Aenderungen zuruecknehmen), stagen, dann Datei mit allen Aenderungen wiederherstellen
+- Stattdessen: Datei editieren (nicht-gewählte Änderungen zurücknehmen), stagen, dann Datei mit allen Änderungen wiederherstellen
 - Alternative: Hunks als Patch extrahieren und via `git apply --cached` anwenden
 - Wann splitten (gemischte Topics) vs. ganze Datei stagen
 - Hunks lesen und Topics zuordnen
@@ -378,44 +378,44 @@ Hunk-Level Splitting Anleitung:
 
 Conflict-Resolution Strategien:
 - Conflict-Marker Format: `<<<<<<<`, `=======`, `>>>>>>>`
-- `--ours` vs `--theirs` Invertierung bei Rebase klar erklaeren
-- Topic-basierte Resolution: erst Ueberblick auf Topic-Ebene, dann Hunk-Level bei gemischten
-- Wann `--abort` empfehlen (>5 Conflicts, unuebersichtlich)
+- `--ours` vs `--theirs` Invertierung bei Rebase klar erklären
+- Topic-basierte Resolution: erst Überblick auf Topic-Ebene, dann Hunk-Level bei gemischten
+- Wann `--abort` empfehlen (>5 Conflicts, unübersichtlich)
 - Wann `--skip` sicher ist
 
 ### `references/git-safety.md`
 
-Shared Safety-Regeln fuer alle Skills:
+Shared Safety-Regeln für alle Skills:
 
 | Situation | Claude reagiert |
 |---|---|
 | Datei hat `<<<<<<<` Conflict-Marker | Blockiert, zeigt Stelle, fixt |
-| Commit enthaelt `console.log` / `debugger` | Warnt, bietet Entfernung an |
-| Push enthaelt unvollstaendige Features | Zeigt was fehlt, fragt ob gewollt |
+| Commit enthält `console.log` / `debugger` | Warnt, bietet Entfernung an |
+| Push enthält unvollständige Features | Zeigt was fehlt, fragt ob gewollt |
 | Branch ist >20 Commits behind main | Warnt: "Sync empfohlen" |
 | Gleiche Datei in mehreren Topics | ⚡-Markierung, Hunk-Level Handling |
 | Vergessener Stash existiert | Erinnert mit Datum |
 | Letzter Commit ist Merge statt Rebase | Warnt |
-| Force-Push noetig | Immer `--force-with-lease`, erklaert warum |
-| Ungewoehnliche Git-History | Zeigt was los ist, fragt bevor weitergemacht wird |
+| Force-Push nötig | Immer `--force-with-lease`, erklärt warum |
+| Ungewöhnliche Git-History | Zeigt was los ist, fragt bevor weitergemacht wird |
 | Secrets im Diff erkannt | Blockiert Push, zeigt Pattern |
 
-Zusaetzlich:
+Zusätzlich:
 - Nie `git add .` oder `git add -A`
-- Nie `--force` ohne explizite User-Bestaetigung
+- Nie `--force` ohne explizite User-Bestätigung
 - Nie ohne `git fetch` pushen
 - Immer `--force-with-lease` statt `--force`
-- Immer Commit-Messages zur Bestaetigung zeigen
+- Immer Commit-Messages zur Bestätigung zeigen
 
 ### `references/branch-history.md`
 
-Git-History zuverlaessig lesen (damit Claude nicht an Commit-IDs scheitert):
-- `--oneline` fuer Ueberblick, `--stat` fuer Details
-- `git log origin/main..origin/<branch>` fuer "was hat Branch gemacht seit main"
-- `git log --all --oneline --graph --decorate -20` fuer visuellen Ueberblick
-- `git shortlog -sn origin/main..origin/<branch>` fuer Commit-Verteilung
+Git-History zuverlässig lesen (damit Claude nicht an Commit-IDs scheitert):
+- `--oneline` für Überblick, `--stat` für Details
+- `git log origin/main..origin/<branch>` für "was hat Branch gemacht seit main"
+- `git log --all --oneline --graph --decorate -20` für visuellen Überblick
+- `git shortlog -sn origin/main..origin/<branch>` für Commit-Verteilung
 - Nie blind `git log` ohne Range — immer eingrenzen
-- `git diff --stat origin/main..origin/<branch>` fuer Datei-Vergleich
+- `git diff --stat origin/main..origin/<branch>` für Datei-Vergleich
 
 ---
 
@@ -424,18 +424,18 @@ Git-History zuverlaessig lesen (damit Claude nicht an Commit-IDs scheitert):
 Generisch, keine Konvention erzwungen:
 - **Main-Branch**: erkennt `main` oder `master` (was existiert)
 - **Deine Branch**: die Branch auf der du gerade bist
-- Optionale Config fuer Defaults, aber out-of-the-box funktioniert es
+- Optionale Config für Defaults, aber out-of-the-box funktioniert es
 
 ---
 
-## Proaktivitaets-Prinzip
+## Proaktivitäts-Prinzip
 
 Alle Skills folgen dem gleichen Muster:
 1. **Warnen** bevor was schiefgeht
 2. **Konkreten Fix zeigen** mit Zeilennummer und Kontext
-3. **Direkt fixen** was der User auswaehlt (per AskUserQuestion multiSelect)
+3. **Direkt fixen** was der User auswählt (per AskUserQuestion multiSelect)
 4. **Nachfragen** bei Unsicherheit
-5. **Nie still zerstoeren** — vor jedem destruktiven Schritt zeigen was passiert
+5. **Nie still zerstören** — vor jedem destruktiven Schritt zeigen was passiert
 
 ---
 
@@ -443,15 +443,15 @@ Alle Skills folgen dem gleichen Muster:
 
 Jeder Skill hat:
 - `name`: kebab-case, max 64 Zeichen
-- `description`: max 1024 Zeichen, beschreibt wann der Skill triggern soll ("pushy" genug fuer zuverlaessiges Triggering)
-- Body: SKILL.md unter 500 Zeilen, References fuer Details
+- `description`: max 1024 Zeichen, beschreibt wann der Skill triggern soll ("pushy" genug für zuverlässiges Triggering)
+- Body: SKILL.md unter 500 Zeilen, References für Details
 
 ---
 
 ## Nicht im Scope
 
-- Branch-Cleanup / Branch-Loeschen (Teams arbeiten dauerhaft in eigenen Branches)
-- Batch-Operationen ueber mehrere Repos (zu riskant ohne Einzelkontrolle)
+- Branch-Cleanup / Branch-Löschen (Teams arbeiten dauerhaft in eigenen Branches)
+- Batch-Operationen über mehrere Repos (zu riskant ohne Einzelkontrolle)
 - MCP-Server oder Helper-Scripts (pure Skills reichen, keine Dependencies)
 - CI/CD Integration
-- PR-Management (kann spaeter ergaenzt werden)
+- PR-Management (kann später ergänzt werden)

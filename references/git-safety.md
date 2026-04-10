@@ -76,3 +76,31 @@ Scan diffs for these patterns before pushing:
 - Private keys (`-----BEGIN`)
 
 When detected: show the line (with value partially redacted), explain the risk, and do not proceed with push until resolved.
+
+## Edge Cases
+
+Check for these situations at the start of any skill:
+
+**Detached HEAD:**
+```bash
+git branch --show-current
+```
+If empty, you're in detached HEAD. Warn the user and ask if they want to checkout a branch first. Most skills (push, sync, commit) need a branch name.
+
+**No remote:**
+```bash
+git remote | head -1
+```
+If empty, there's no remote configured. Skills that fetch/push won't work. Inform the user.
+
+**Shallow clone:**
+```bash
+git rev-parse --is-shallow-repository
+```
+If "true", warn that history commands (log ranges, merge-base, rev-list --count) may produce incomplete results. Suggest `git fetch --unshallow` if needed.
+
+**Empty repo (no commits):**
+```bash
+git rev-parse HEAD 2>/dev/null
+```
+If this fails, the repo has no commits. Most skills won't work. Inform the user.

@@ -72,6 +72,40 @@ When the user selects an action, `cd` into that repo and invoke the appropriate 
 
 After completing an action, show the updated dashboard to reflect changes (re-scan the affected repo).
 
+### Step 6: Remote Repos (nicht geklont)
+
+After showing local repos, check if `gh` CLI is available and authenticated:
+
+```bash
+gh auth status 2>/dev/null
+```
+
+If available, list repos from the user's GitHub organizations that aren't cloned locally:
+
+```bash
+# List all repos from user's orgs
+gh repo list --limit 50 --json name,owner,updatedAt,defaultBranchRef --jq '.[] | "\(.owner.login)/\(.name) \(.updatedAt)"'
+```
+
+Compare with local repos (by name matching). Show repos that exist on GitHub but not locally:
+
+```
+Remote Repos (nicht lokal geklont):
+
+  Org/Repo                    Letztes Update
+  ──────────────────────────────────────────
+  myorg/new-service           vor 2 Tagen
+  myorg/internal-tools        vor 1 Woche
+  myorg/legacy-api            vor 3 Monaten
+
+  3 Repos in deinen Organisationen sind nicht lokal geklont.
+  Klonen? (Nummer oder "skip")
+```
+
+If the user selects a repo to clone, ask where to put it (default: `~/source/`) and run `git clone`.
+
+Only show this section if there are actually uncloned repos. Skip silently if `gh` is not available or not authenticated — this is an optional bonus feature.
+
 ## Token Efficiency
 
 The entire dashboard scan uses ~2 lines of output per repo. For 10 repos, that's ~20 lines total. No diffs are read unless the user asks for details.

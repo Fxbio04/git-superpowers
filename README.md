@@ -118,6 +118,20 @@ claude plugin marketplace add Fxbio04/git-superpowers
 claude plugin install git-superpowers@git-superpowers
 ```
 
+### Update
+
+```
+/plugin marketplace update git-superpowers
+/plugin update git-superpowers@git-superpowers
+```
+
+Oder via CLI:
+
+```bash
+claude plugin marketplace update git-superpowers
+claude plugin update git-superpowers@git-superpowers
+```
+
 ---
 
 ## Optionale Konfiguration

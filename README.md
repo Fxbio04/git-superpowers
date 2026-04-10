@@ -55,51 +55,71 @@
 
 | Skill | Beschreibung |
 |---|---|
-| `/smart-commit` | Gruppiert Änderungen nach Topics per KI-Analyse. Wenn eine Datei Änderungen aus verschiedenen Topics enthält (Bugfix UND Feature), wird auf Hunk-Ebene gesplittet — jeder Commit ist sauber und fokussiert. |
-| `/smart-sync` | Rebased deine Branch auf main mit Topic-basierter Conflict-Resolution. Statt roher Conflict-Diffs siehst du welches Topic jeder Conflict betrifft und wirst durch die Lösung geführt. |
-| `/safe-push` | Pre-Push Audit mit automatischen Fixes. Scannt ausgehende Commits auf Debug-Statements, Conflict-Marker, Secrets, unvollständige Features und große Dateien. Sagt Conflicts vorher und fixt Probleme direkt — nicht nur Warnungen. |
+| `/git-superpowers:smart-commit` | Gruppiert Änderungen nach Topics per KI-Analyse. Wenn eine Datei Änderungen aus verschiedenen Topics enthält (Bugfix UND Feature), wird auf Hunk-Ebene gesplittet — jeder Commit ist sauber und fokussiert. |
+| `/git-superpowers:smart-sync` | Rebased deine Branch auf main mit Topic-basierter Conflict-Resolution. Statt roher Conflict-Diffs siehst du welches Topic jeder Conflict betrifft und wirst durch die Lösung geführt. |
+| `/git-superpowers:safe-push` | Pre-Push Audit mit automatischen Fixes. Scannt ausgehende Commits auf Debug-Statements, Conflict-Marker, Secrets, unvollständige Features und große Dateien. Sagt Conflicts vorher und fixt Probleme direkt — nicht nur Warnungen. |
 
 ### Überblick & Analyse
 
 | Skill | Beschreibung |
 |---|---|
-| `/repo-overview` | Multi-Repo Dashboard: zeigt alle Repos mit Branch-Status, Behind/Ahead, uncommitted Changes und letztem Commit. Bietet direkte Aktionen an. |
-| `/branch-inspect` | Zeigt was auf anderen Branches passiert — wer hat was committed, welche Dateien überschneiden sich, wo wird es Conflicts geben. |
-| `/cross-compare` | Vergleicht wie ein bestimmtes Modul/eine Datei über mehrere Branches hinweg aussieht. Zeigt Unterschiede und potenzielle Kollisionen. |
-| `/conflict-simulator` | Sagt Merge-Conflicts vorher BEVOR sie passieren — ohne den Rebase tatsächlich auszuführen. Zeigt Schweregrad und empfiehlt wann man syncen sollte. |
+| `/git-superpowers:repo-overview` | Multi-Repo Dashboard: zeigt alle Repos mit Branch-Status, Behind/Ahead, uncommitted Changes und letztem Commit. Bietet direkte Aktionen an. |
+| `/git-superpowers:branch-inspect` | Zeigt was auf anderen Branches passiert — wer hat was committed, welche Dateien überschneiden sich, wo wird es Conflicts geben. |
+| `/git-superpowers:cross-compare` | Vergleicht wie ein bestimmtes Modul/eine Datei über mehrere Branches hinweg aussieht. Zeigt Unterschiede und potenzielle Kollisionen. |
+| `/git-superpowers:conflict-simulator` | Sagt Merge-Conflicts vorher BEVOR sie passieren — ohne den Rebase tatsächlich auszuführen. Zeigt Schweregrad und empfiehlt wann man syncen sollte. |
 
 ### Code-Qualität
 
 | Skill | Beschreibung |
 |---|---|
-| `/diff-review` | KI-Code-Review deiner Änderungen vor dem Commit. Findet Bugs, Logic-Fehler, Security-Issues und fehlende Edge Cases — kein Linter, sondern ein Senior Dev Review. |
-| `/commit-split` | Teilt einen bestehenden Commit nachträglich in mehrere fokussierte Commits auf. Erkennt Topics automatisch und führt durch den Split. |
+| `/git-superpowers:diff-review` | KI-Code-Review deiner Änderungen vor dem Commit. Findet Bugs, Logic-Fehler, Security-Issues und fehlende Edge Cases — kein Linter, sondern ein Senior Dev Review. |
+| `/git-superpowers:commit-split` | Teilt einen bestehenden Commit nachträglich in mehrere fokussierte Commits auf. Erkennt Topics automatisch und führt durch den Split. |
 
 ### Branch-Operationen
 
 | Skill | Beschreibung |
 |---|---|
-| `/cherry-pick` | Holt gezielt einzelne Commits aus anderen Branches. Zeigt vorher was kommt, prüft auf Duplikate und Conflicts. |
-| `/selective-merge` | Bringt einzelne Dateien (nicht ganze Commits) aus einer anderen Branch. Wahlweise komplett ersetzen oder nur bestimmte Änderungen übernehmen. |
-| `/hotfix` | Notfall-Workflow für Produktions-Bugs. Stashed aktuelle Arbeit, erstellt Hotfix-Branch von main, führt durch Fix + Audit + PR, und kehrt zur vorherigen Branch zurück. |
+| `/git-superpowers:cherry-pick` | Holt gezielt einzelne Commits aus anderen Branches. Zeigt vorher was kommt, prüft auf Duplikate und Conflicts. |
+| `/git-superpowers:selective-merge` | Bringt einzelne Dateien (nicht ganze Commits) aus einer anderen Branch. Wahlweise komplett ersetzen oder nur bestimmte Änderungen übernehmen. |
+| `/git-superpowers:hotfix` | Notfall-Workflow für Produktions-Bugs. Stashed aktuelle Arbeit, erstellt Hotfix-Branch von main, führt durch Fix + Audit + PR, und kehrt zur vorherigen Branch zurück. |
 
 ### History & Recovery
 
 | Skill | Beschreibung |
 |---|---|
-| `/git-history` | Deep Dive in die Geschichte einer Datei oder Funktion. Wer hat was wann geändert und warum — als lesbare Zusammenfassung, nicht als rohe Git-Ausgabe. |
-| `/git-undo` | Recovery wenn was schiefgeht. Falscher Branch, versehentlich gepusht, Commit rückgängig machen — zeigt immer die sicherste Option zuerst. |
-| `/pr-prep` | Bereitet einen sauberen Pull Request vor. Prüft Status, führt Audit durch, generiert PR-Beschreibung aus Commits, erstellt PR via `gh`. |
+| `/git-superpowers:git-history` | Deep Dive in die Geschichte einer Datei oder Funktion. Wer hat was wann geändert und warum — als lesbare Zusammenfassung, nicht als rohe Git-Ausgabe. |
+| `/git-superpowers:git-undo` | Recovery wenn was schiefgeht. Falscher Branch, versehentlich gepusht, Commit rückgängig machen — zeigt immer die sicherste Option zuerst. |
+| `/git-superpowers:pr-prep` | Bereitet einen sauberen Pull Request vor. Prüft Status, führt Audit durch, generiert PR-Beschreibung aus Commits, erstellt PR via `gh`. |
 
 ---
 
 ## Installation
 
 ```bash
-git clone https://github.com/Fxbio04/git-superpowers.git ~/.claude/plugins/git-superpowers
+# 1. Repo clonen
+git clone https://github.com/Fxbio04/git-superpowers.git ~/git-superpowers
+
+# 2. Als Plugin registrieren (in installed_plugins.json eintragen)
+# Datei: ~/.claude/plugins/installed_plugins.json
+# Folgenden Block in "plugins" hinzufügen:
 ```
 
-Dann in den Claude Code Settings den Plugin-Pfad registrieren. Fertig — alle 15 Skills sind sofort verfügbar.
+```json
+"git-superpowers@local": [
+  {
+    "scope": "user",
+    "installPath": "<PFAD-ZU>/git-superpowers",
+    "version": "1.0.0",
+    "installedAt": "2026-04-11T00:00:00.000Z",
+    "lastUpdated": "2026-04-11T00:00:00.000Z"
+  }
+]
+```
+
+```bash
+# 3. Claude Code neu starten — alle 15 Skills sind verfügbar als:
+#    git-superpowers:smart-commit, git-superpowers:repo-overview, etc.
+```
 
 ---
 

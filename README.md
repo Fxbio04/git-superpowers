@@ -6,17 +6,35 @@
 
 <p align="center">
   <a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License: MIT" />
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License: MIT" />
   </a>
-  <img src="https://img.shields.io/badge/Skills-15-orange?style=flat-square" alt="15 Skills" />
-  <img src="https://img.shields.io/badge/Claude_Code-Plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
-  <img src="https://img.shields.io/badge/Dependencies-0-brightgreen?style=flat-square" alt="Zero Dependencies" />
+  <img src="https://img.shields.io/badge/Skills-15-orange?style=for-the-badge" alt="15 Skills" />
+  <img src="https://img.shields.io/badge/Claude_Code-Plugin-blueviolet?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude Code Plugin" />
+  <img src="https://img.shields.io/badge/Dependencies-0-brightgreen?style=for-the-badge" alt="Zero Dependencies" />
 </p>
 
 <p align="center">
   Claude Code Skills für intelligente Git-Workflows.<br>
   Topic-basierte Commits, smartes Rebasing, Multi-Repo Überblick, Pre-Push Auditing, Conflict-Vorhersage und mehr — alles KI-gestützt.
 </p>
+
+---
+
+## Inhalt
+
+- [Das Problem](#das-problem)
+- [Skills](#skills)
+  - [Kern-Workflows](#kern-workflows)
+  - [Überblick & Analyse](#überblick--analyse)
+  - [Code-Qualität](#code-qualität)
+  - [Branch-Operationen](#branch-operationen)
+  - [History & Recovery](#history--recovery)
+- [Installation](#installation)
+- [Optionale Konfiguration](#optionale-konfiguration)
+- [Architektur](#architektur)
+- [Sicherheit](#sicherheit)
+- [Author](#author)
+- [Lizenz](#lizenz)
 
 ---
 

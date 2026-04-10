@@ -1,10 +1,24 @@
+<h1 align="center">git-superpowers</h1>
+
 <p align="center">
-  <img src="assets/banner.png" alt="git-superpowers" width="100%">
+  <img width="1376" height="768" alt="git-superpowers" src="https://github.com/user-attachments/assets/a92ccde2-920d-4b1a-8c99-742388568b8c" />
 </p>
 
-# git-superpowers
+<p align="center">
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License: MIT" />
+  </a>
+  <img src="https://img.shields.io/badge/Skills-15-orange?style=flat-square" alt="15 Skills" />
+  <img src="https://img.shields.io/badge/Claude_Code-Plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
+  <img src="https://img.shields.io/badge/Dependencies-0-brightgreen?style=flat-square" alt="Zero Dependencies" />
+</p>
 
-Claude Code Skills für intelligente Git-Workflows. Topic-basierte Commits, smartes Rebasing, Multi-Repo Überblick, Pre-Push Auditing, Conflict-Vorhersage und mehr — alles KI-gestützt.
+<p align="center">
+  Claude Code Skills für intelligente Git-Workflows.<br>
+  Topic-basierte Commits, smartes Rebasing, Multi-Repo Überblick, Pre-Push Auditing, Conflict-Vorhersage und mehr — alles KI-gestützt.
+</p>
+
+---
 
 ## Das Problem
 
@@ -14,6 +28,8 @@ Claude Code Skills für intelligente Git-Workflows. Topic-basierte Commits, smar
 - **Kein Überblick** — schwer zu sehen wo alle Repos stehen und was andere Branches machen
 - **Vermeidbare Fehler** — Debug-Statements, vergessene Conflict-Marker, Secrets im Diff
 - **Schwer nachvollziehbar** — wer hat was wann geändert und warum
+
+---
 
 ## Skills
 
@@ -57,6 +73,8 @@ Claude Code Skills für intelligente Git-Workflows. Topic-basierte Commits, smar
 | `/git-undo` | Recovery wenn was schiefgeht. Falscher Branch, versehentlich gepusht, Commit rückgängig machen — zeigt immer die sicherste Option zuerst. |
 | `/pr-prep` | Bereitet einen sauberen Pull Request vor. Prüft Status, führt Audit durch, generiert PR-Beschreibung aus Commits, erstellt PR via `gh`. |
 
+---
+
 ## Installation
 
 ```bash
@@ -64,6 +82,8 @@ git clone https://github.com/Fxbio04/git-superpowers.git ~/.claude/plugins/git-s
 ```
 
 Dann in den Claude Code Settings den Plugin-Pfad registrieren. Fertig — alle 15 Skills sind sofort verfügbar.
+
+---
 
 ## Optionale Konfiguration
 
@@ -84,6 +104,8 @@ topics:
   shopify:
     paths: ["src/shopify/", "departments/shopifySync"]
 ```
+
+---
 
 ## Architektur
 
@@ -118,9 +140,10 @@ git-superpowers/
 
 **Token-effizient by Design.** Skills nutzen `git diff --stat` und `--name-only` für Überblicke, volle Diffs werden nur gelesen wenn semantische Analyse nötig ist.
 
+---
+
 ## Sicherheit
 
-Alle Skills folgen diesen Regeln:
 - Nie `git add .` oder `git add -A` — immer spezifische Dateien stagen
 - Nie `--force` Push — immer `--force-with-lease`
 - Immer zeigen was passieren wird bevor es passiert
@@ -128,6 +151,8 @@ Alle Skills folgen diesen Regeln:
 - Vor jedem Push auf Secrets scannen
 - Probleme direkt fixen statt nur warnen
 - Bei Unsicherheit nachfragen statt still kaputtmachen
+
+---
 
 ## Author
 

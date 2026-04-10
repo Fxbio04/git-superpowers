@@ -4,7 +4,6 @@
 
 ## Motivation
 
-Teams die in Feature-Branches arbeiten kämpfen mit:
 - **Gemischte Änderungen**: Mehrere Features/Bugfixes in derselben Branch, teilweise in denselben Dateien
 - **Merge-Conflict-Chaos**: Beim Rebase von main kommen Conflicts in Dateien die Änderungen aus verschiedenen Topics enthalten (z.B. Amazon-Imports + Bugfix in einer Datei)
 - **Unfertiges wird mitgepusht**: Beim Pushen landen halbfertige Features mit im Commit

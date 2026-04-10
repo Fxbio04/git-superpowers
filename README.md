@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.png" alt="git-superpowers" width="100%">
+</p>
+
 # git-superpowers
 
 Claude Code Skills für intelligente Git-Workflows. Topic-basierte Commits, smartes Rebasing, Multi-Repo Überblick, Pre-Push Auditing, Conflict-Vorhersage und mehr — alles KI-gestützt.
@@ -124,6 +128,10 @@ Alle Skills folgen diesen Regeln:
 - Vor jedem Push auf Secrets scannen
 - Probleme direkt fixen statt nur warnen
 - Bei Unsicherheit nachfragen statt still kaputtmachen
+
+## Author
+
+[@Fxbio04](https://github.com/Fxbio04)
 
 ## Lizenz
 

@@ -58,6 +58,8 @@ Consider running /smart-sync before pushing to avoid conflicts later.
 
 If no overlap: continue silently (don't clutter the output).
 
+For a deeper simulation with severity analysis, suggest: "Run `/conflict-simulator` for a full conflict analysis."
+
 ### Step 2: Audit
 
 Run these checks against the outgoing diff (`git diff origin/<branch>..HEAD`):

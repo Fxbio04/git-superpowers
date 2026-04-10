@@ -28,9 +28,19 @@ git-superpowers/
 ├── skills/
 │   ├── smart-commit/SKILL.md
 │   ├── smart-sync/SKILL.md
-│   ├── repo-overview/SKILL.md
 │   ├── safe-push/SKILL.md
-│   └── branch-inspect/SKILL.md
+│   ├── repo-overview/SKILL.md
+│   ├── branch-inspect/SKILL.md
+│   ├── cross-compare/SKILL.md
+│   ├── conflict-simulator/SKILL.md
+│   ├── diff-review/SKILL.md
+│   ├── commit-split/SKILL.md
+│   ├── cherry-pick/SKILL.md
+│   ├── selective-merge/SKILL.md
+│   ├── hotfix/SKILL.md
+│   ├── git-history/SKILL.md
+│   ├── git-undo/SKILL.md
+│   └── pr-prep/SKILL.md
 ├── references/
 │   ├── topic-detection.md
 │   ├── hunk-analysis.md
@@ -453,4 +463,3 @@ Jeder Skill hat:
 - Batch-Operationen über mehrere Repos (zu riskant ohne Einzelkontrolle)
 - MCP-Server oder Helper-Scripts (pure Skills reichen, keine Dependencies)
 - CI/CD Integration
-- PR-Management (kann später ergänzt werden)

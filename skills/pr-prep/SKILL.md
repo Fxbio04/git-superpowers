@@ -97,23 +97,22 @@ Fix these before creating the PR? (recommended)
 
 Check whether this branch would conflict with main if merged right now. This is a read-only simulation — it does not touch your branch.
 
+Run a quick conflict check using the conflict-simulator approach:
+
 ```bash
-# Save current position
-CURRENT=$(git branch --show-current)
-
-# Try the merge in a detached HEAD state
-git checkout --detach origin/main --quiet
-git merge --no-commit --no-ff $CURRENT --quiet 2>&1
-MERGE_RESULT=$?
-
-# Clean up regardless of outcome
-git merge --abort 2>/dev/null
-git checkout $CURRENT --quiet
+# Check exit status: 0 = clean, 1 = conflicts
+git merge-tree --write-tree HEAD origin/main >/dev/null 2>&1
+RESULT=$?
 ```
 
-If `MERGE_RESULT` is non-zero, extract the conflicted files:
+If conflicts are predicted (`RESULT=1`), warn the user and suggest running `/smart-sync` first. For detailed conflict analysis, suggest `/conflict-simulator`.
+
+If `git merge-tree --write-tree` is not available (git < 2.38), fall back to file overlap check:
 ```bash
-git diff --name-only --diff-filter=U
+MERGE_BASE=$(git merge-base HEAD origin/main)
+comm -12 \
+  <(git diff --name-only $MERGE_BASE..HEAD | sort) \
+  <(git diff --name-only $MERGE_BASE..origin/main | sort)
 ```
 
 Report:

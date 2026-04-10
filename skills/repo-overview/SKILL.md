@@ -27,10 +27,9 @@ Keep the list manageable — if more than 20 repos are found, show only those wi
 
 ### Step 2: Gather Status
 
-For each repo, run these commands efficiently using `git -C <repo-path>`:
+For each repo, run these commands using `git -C <repo-path>`:
 
 ```bash
-# All in quick succession — each produces minimal output
 git -C <path> branch --show-current
 git -C <path> fetch origin --quiet 2>/dev/null
 git -C <path> rev-list --count HEAD..origin/main 2>/dev/null || echo "?"
@@ -39,12 +38,12 @@ git -C <path> status --porcelain | wc -l
 git -C <path> log --oneline -1 --format='%cr'
 ```
 
-Handle repos that don't have a remote or don't have `origin/main` — fall back to `origin/master` or show "no remote".
+Handle repos without a remote or without `origin/main` — fall back to `origin/master` or show "no remote".
 
 ### Step 3: Display Dashboard
 
 ```
-Repo Overview (6 repos in ~/source/)
+Repo Overview (6 repos)
 
 Repo                  Branch  Behind  Ahead  Changes  Last Commit
 ──────────────────────────────────────────────────────────────────
@@ -53,12 +52,11 @@ ews-connector         fb         0 ✓      1    0 files  1 day ago
 brognoMicroServices   fb         4 ⚠️     0    2 files  3 hours ago
 shopify-connector     fb         0 ✓      5    0 files  5 hours ago
 brognoMCP             main       0 ✓      0    0 files  2 days ago
-EWS                   fb         8 ⚠️     2   12 files  30 min ago
 
-⚠️ 3 repos are behind main — consider syncing
+⚠️ 2 repos are behind main — consider syncing
 ```
 
-Sort by: repos with issues first (behind main, uncommitted changes), then clean repos.
+Sort by: repos with issues first (behind, uncommitted changes), then clean repos.
 
 ### Step 4: Offer Actions
 

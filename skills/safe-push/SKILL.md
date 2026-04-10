@@ -37,19 +37,13 @@ e7f8g9h chore(deps): update react-charts
 
 ### Step 2: Audit
 
-Run these checks against the outgoing diff:
-
-```bash
-# Get the full diff once for scanning
-git diff origin/<branch>..HEAD
-```
+Run these checks against the outgoing diff (`git diff origin/<branch>..HEAD`):
 
 **Check 1: Debug Artifacts**
-Scan the diff for lines being ADDED (starting with `+`) that contain:
-- `console.log` (but not in test files or logging utilities)
-- `console.debug`, `console.warn` used as debug output
+Scan for added lines containing:
+- `console.log`, `console.debug` (not in test files or logging utilities)
 - `debugger` statements
-- `print(` that looks like debug output (not in Python logging code)
+- `print(` that looks like debug output
 
 **Check 2: Conflict Markers**
 ```bash
@@ -67,11 +61,7 @@ Read the diff semantically:
 
 **Check 5: Large Files**
 ```bash
-git diff --stat origin/<branch>..HEAD | grep -E '\d{4,} \+'  # files with 1000+ insertions
-git diff --name-only origin/<branch>..HEAD | while read f; do
-  size=$(wc -c < "$f" 2>/dev/null || echo 0)
-  [ "$size" -gt 1000000 ] && echo "LARGE: $f ($size bytes)"
-done
+git diff --stat origin/<branch>..HEAD | grep -E '\d{4,} \+'
 ```
 
 ### Step 3: Report and Fix

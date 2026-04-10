@@ -13,40 +13,45 @@ Read `references/git-safety.md` before your first action.
 
 ### Step 1: Find Repositories
 
-Determine which directories to scan:
+Scan for git repos in a single command across all common locations:
 
-1. If `.claude-git.yml` exists in the current directory or home directory with `scan_dirs`, use those
-2. Otherwise, scan common locations:
-   ```bash
-   # Find git repos in likely locations (max 2 levels deep)
-   find ~/source -maxdepth 2 -name ".git" -type d 2>/dev/null | sed 's/\/.git$//'
-   ```
-3. If nothing found in `~/source`, try the current directory's parent
+```bash
+find ~/source ~/projects ~/code ~/dev ~/repos ~/work ~ -maxdepth 3 -name ".git" -type d 2>/dev/null | sed 's/\/.git$//' | sort -u
+```
+
+This checks all typical developer directories in one pass. Most paths won't exist and are silently ignored via `2>/dev/null`.
+
+If `.claude-git.yml` exists in the current or home directory with `scan_dirs`, scan those paths instead.
+
+If nothing is found, fall back to the current directory's parent.
 
 Keep the list manageable — if more than 20 repos are found, show only those with recent activity (committed within last 30 days).
 
 ### Step 2: Gather Status
 
-For each repo, run these commands using `git -C <repo-path>`:
+IMPORTANT: Gather ALL repo data in ONE single Bash call. Do NOT run separate Bash calls per repo — that wastes time and tokens. Use this pattern:
 
 ```bash
-git -C <path> branch --show-current
-git -C <path> fetch origin --quiet 2>/dev/null
-git -C <path> rev-list --count HEAD..origin/main 2>/dev/null || echo "?"
-git -C <path> rev-list --count origin/main..HEAD 2>/dev/null || echo "?"
-git -C <path> status --porcelain | wc -l
-git -C <path> log --oneline -1 --format='%cr'
-```
-
-Run these commands in parallel across all repos — launch one Bash call per repo or batch them in a single script. Do not run them sequentially repo by repo, as each fetch adds latency. Example:
-
-```bash
-# Parallel: run all fetches at once in background
-for path in $REPOS; do
+# Fetch all repos in parallel first
+for path in /path/to/repo1 /path/to/repo2 /path/to/repo3; do
   git -C "$path" fetch origin --quiet 2>/dev/null &
 done
 wait
+
+# Then collect all status in one loop
+for path in /path/to/repo1 /path/to/repo2 /path/to/repo3; do
+  name=$(basename "$path")
+  branch=$(git -C "$path" branch --show-current 2>/dev/null || echo "detached")
+  behind=$(git -C "$path" rev-list --count HEAD..origin/main 2>/dev/null || echo "?")
+  ahead=$(git -C "$path" rev-list --count origin/main..HEAD 2>/dev/null || echo "?")
+  changes=$(git -C "$path" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+  last=$(git -C "$path" log --oneline -1 --format='%cr' 2>/dev/null || echo "no commits")
+  remote_url=$(git -C "$path" remote get-url origin 2>/dev/null || echo "no remote")
+  echo "$name|$branch|$behind|$ahead|$changes|$last|$remote_url"
+done
 ```
+
+This runs everything in ONE Bash call and outputs a parseable table. The parallel fetch at the top ensures all repos are up to date before reading status.
 
 Handle repos without a remote or without `origin/main` — fall back to `origin/master` or show "no remote".
 

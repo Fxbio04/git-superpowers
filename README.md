@@ -95,28 +95,19 @@
 
 ## Installation
 
-### Claude Code (via Plugin Marketplace)
-
-Marketplace registrieren:
+### Claude Code
 
 ```
-/plugin marketplace add Fxbio04/git-superpowers
+/plugin marketplace add Fxbio04/git-superpowers && /plugin install git-superpowers@git-superpowers
 ```
 
-Plugin installieren:
+### CLI
 
-```
-/plugin install git-superpowers@git-superpowers
+```bash
+claude plugin marketplace add Fxbio04/git-superpowers && claude plugin install git-superpowers@git-superpowers
 ```
 
 Fertig — alle 15 Skills sind sofort verfügbar.
-
-### Alternativ via CLI
-
-```bash
-claude plugin marketplace add Fxbio04/git-superpowers
-claude plugin install git-superpowers@git-superpowers
-```
 
 ### Update
 

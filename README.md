@@ -99,27 +99,16 @@
 # 1. Repo clonen
 git clone https://github.com/Fxbio04/git-superpowers.git ~/git-superpowers
 
-# 2. Als Plugin registrieren (in installed_plugins.json eintragen)
-# Datei: ~/.claude/plugins/installed_plugins.json
-# Folgenden Block in "plugins" hinzufügen:
+# 2. Als Marketplace registrieren
+claude plugin marketplace add ~/git-superpowers
+
+# 3. Plugin installieren
+claude plugin install git-superpowers
+
+# 4. Claude Code neu starten — fertig!
 ```
 
-```json
-"git-superpowers@local": [
-  {
-    "scope": "user",
-    "installPath": "<PFAD-ZU>/git-superpowers",
-    "version": "1.0.0",
-    "installedAt": "2026-04-11T00:00:00.000Z",
-    "lastUpdated": "2026-04-11T00:00:00.000Z"
-  }
-]
-```
-
-```bash
-# 3. Claude Code neu starten — alle 15 Skills sind verfügbar als:
-#    git-superpowers:smart-commit, git-superpowers:repo-overview, etc.
-```
+Alle 15 Skills sind dann verfügbar als `git-superpowers:smart-commit`, `git-superpowers:repo-overview`, etc.
 
 ---
 

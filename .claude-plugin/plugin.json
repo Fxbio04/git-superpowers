@@ -1,0 +1,22 @@
+{
+  "name": "git-superpowers",
+  "description": "15 AI-powered Git workflow skills for Claude Code: smart commits, intelligent rebasing, conflict prediction, code review, and more",
+  "version": "1.0.0",
+  "author": {
+    "name": "Fxbio04"
+  },
+  "homepage": "https://github.com/Fxbio04/git-superpowers",
+  "repository": "https://github.com/Fxbio04/git-superpowers",
+  "license": "MIT",
+  "keywords": [
+    "git",
+    "skills",
+    "rebase",
+    "merge-conflicts",
+    "commit",
+    "push",
+    "code-review",
+    "multi-repo",
+    "workflows"
+  ]
+}

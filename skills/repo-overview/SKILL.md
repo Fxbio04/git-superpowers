@@ -13,17 +13,28 @@ Read `references/git-safety.md` before your first action.
 
 ### Step 1: Find Repositories
 
-Scan for git repos in a single command across all common locations:
+Use these sources in order — stop as soon as you have results:
 
+**1. Context (fastest):** Check if you already know where repos are — from CLAUDE.md, memory, the current conversation, or the current working directory. If the user is in a git repo, check sibling directories too.
+
+**2. Config:** If `.claude-git.yml` exists in the current or home directory with `scan_dirs`, use those paths.
+
+**3. macOS Spotlight (instant, no disk scan):**
 ```bash
-find ~/source ~/projects ~/code ~/dev ~/repos ~/work ~ -maxdepth 3 -name ".git" -type d 2>/dev/null | sed 's/\/.git$//' | sort -u
+mdfind "kMDItemFSName == '.git'" -onlyin ~ 2>/dev/null | sed 's/\/.git$//' | sort -u
 ```
 
-This checks all typical developer directories in one pass. Most paths won't exist and are silently ignored via `2>/dev/null`.
+**4. Linux locate (fast, uses index):**
+```bash
+locate -r '/\.git$' 2>/dev/null | grep "^$HOME" | sed 's/\/.git$//' | sort -u
+```
 
-If `.claude-git.yml` exists in the current or home directory with `scan_dirs`, scan those paths instead.
+**5. Fallback (slow, only if nothing else works):**
+```bash
+find ~ -maxdepth 4 -name ".git" -type d 2>/dev/null | sed 's/\/.git$//' | sort -u
+```
 
-If nothing is found, fall back to the current directory's parent.
+Filter out irrelevant results: skip paths containing `node_modules`, `.cache`, `.claude/plugins`, `Library`, `.Trash`.
 
 Keep the list manageable — if more than 20 repos are found, show only those with recent activity (committed within last 30 days).
 

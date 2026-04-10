@@ -7,7 +7,7 @@ description: Deep dive into the history of a file, function, or line range — u
 
 Investigate the history of a file, function, or specific lines. The goal is a narrative — not a wall of commit hashes. Start with summaries, go deep only when needed.
 
-Read `references/branch-history.md` for command patterns before starting.
+Read `references/git-safety.md` and `references/branch-history.md` for command patterns before starting.
 
 ## Workflow
 

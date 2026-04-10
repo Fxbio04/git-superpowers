@@ -13,7 +13,13 @@ Read `references/git-safety.md` before your first action. Even under time pressu
 
 ### Step 1: Save Your Current Work
 
-First, protect whatever you're in the middle of so nothing gets lost.
+First, record the current branch name — you need it in Step 8 to return.
+
+```bash
+PREVIOUS_BRANCH=$(git branch --show-current)
+```
+
+Then, protect whatever you're in the middle of so nothing gets lost.
 
 ```bash
 git status --porcelain
@@ -134,8 +140,16 @@ Then retry the push. Hotfix branches are new so this should never happen, but ha
 
 ### Step 7: Create the PR
 
-Create a PR to main with a HOTFIX label so it's visible in the review queue:
+Create a PR to main with a HOTFIX label so it's visible in the review queue.
 
+First, check if `gh` CLI is available:
+```bash
+command -v gh >/dev/null 2>&1
+```
+
+If not available: push the branch and create the PR manually at the GitHub web interface. Skip to Step 8.
+
+If available:
 ```bash
 gh pr create \
   --title "fix: <description>" \

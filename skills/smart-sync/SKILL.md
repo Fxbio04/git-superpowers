@@ -61,12 +61,9 @@ git diff --stat HEAD...origin/main
 
 Warn about potential conflicts — check if any affected files also have local changes:
 ```bash
-# files changed in main
-git diff --name-only HEAD...origin/main > /tmp/main-changes.txt
-# files changed in your branch since diverging
-git diff --name-only $(git merge-base HEAD origin/main)..HEAD > /tmp/branch-changes.txt
-# overlap
-comm -12 <(sort /tmp/main-changes.txt) <(sort /tmp/branch-changes.txt)
+comm -12 \
+  <(git diff --name-only HEAD...origin/main | sort) \
+  <(git diff --name-only $(git merge-base HEAD origin/main)..HEAD | sort)
 ```
 
 If there's overlap, warn: "These files were changed in both main and your branch — conflicts are likely: ..."
@@ -83,7 +80,9 @@ If it succeeds without conflicts → skip to Step 6.
 
 ### Step 4: Conflict Analysis
 
-When conflicts occur, analyze them by topic. Read `references/conflict-resolution.md` for the full strategy.
+When conflicts occur, analyze them by topic. For complex conflicts (>3 files), spawn the conflict-resolver agent: read `agents/conflict-resolver.md` and run it as a subagent. For simpler cases, resolve inline.
+
+Read `references/conflict-resolution.md` for the full strategy.
 
 ```bash
 git diff --name-only --diff-filter=U

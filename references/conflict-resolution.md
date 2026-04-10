@@ -124,5 +124,5 @@ Always suggest enabling rerere when a user resolves the same conflict pattern mo
 
 When rebase completes successfully:
 1. Verify the branch looks right: `git log --oneline -10`
-2. Check no conflict markers remain: `grep -rn "<<<<<<" src/` (adapt path)
+2. Check no conflict markers remain: `grep -rn "<<<<<<" .`
 3. Run a quick build/test if available

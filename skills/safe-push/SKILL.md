@@ -73,9 +73,8 @@ Scan for added lines containing:
 - `print(` that looks like debug output
 
 **Check 2: Conflict Markers**
-```bash
-git diff origin/<branch>..HEAD | grep -n "^+.*<<<<<<\|^+.*======\|^+.*>>>>>>"
-```
+Scan the diff output from above for conflict marker patterns (`<<<<<<<`, `=======`, `>>>>>>>`).
+(Already captured in the audit step — reuse the same output.)
 
 **Check 3: Secret Patterns**
 Scan added lines for patterns from `references/git-safety.md` secret patterns section.
@@ -118,7 +117,7 @@ Issues found:
 [4] TODO in src/utils/api.ts:12 — "TODO: add error handling for timeout"
 ```
 
-Then ask with multiSelect: **"Which issues should I fix?"**
+Then ask the user which issues to fix (they can pick multiple): **"Which issues should I fix?"**
 - Each numbered issue as an option
 - "Fix all"
 - "Ignore and push anyway"

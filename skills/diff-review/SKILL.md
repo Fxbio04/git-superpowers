@@ -9,6 +9,8 @@ Review your changes for real problems before they become commits. This skill rea
 
 Read `references/git-safety.md` before your first action.
 
+For large diffs (>500 lines), spawn the code-reviewer agent: read `agents/code-reviewer.md` and run it as a subagent. This keeps the main conversation clean while the review runs.
+
 ## Workflow
 
 ### Step 1: Preflight
@@ -146,7 +148,7 @@ no security concerns were detected. Ready to commit.
 
 ### Step 6: Fix Selected Issues
 
-If there are findings, ask with a multiSelect:
+If there are findings, ask the user which issues to fix (they can pick multiple):
 
 ```
 Which issues should I fix?

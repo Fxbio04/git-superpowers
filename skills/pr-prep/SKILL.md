@@ -204,4 +204,4 @@ Next steps:
 - Never create a PR without showing the outgoing commits first
 - Always run the conflict dry-run — reviewers will notice conflicts, even if the user doesn't ask
 - The PR description must have a Test Plan section — reviewers need to know what to verify
-- Always clean up the detached HEAD state after the conflict simulation, even on error
+- The conflict check uses read-only git merge-tree — no cleanup needed

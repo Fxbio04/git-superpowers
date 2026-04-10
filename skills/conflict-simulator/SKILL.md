@@ -7,7 +7,7 @@ description: Predict merge or rebase conflicts BEFORE they happen, without modif
 
 Predict merge and rebase conflicts before they happen — without touching your branch. This skill is read-only: it simulates, reports, and leaves everything exactly as it found it.
 
-Read `references/conflict-resolution.md` for how to interpret conflict output.
+Read `references/git-safety.md` and `references/conflict-resolution.md` before your first action.
 
 ## Workflow
 
@@ -82,8 +82,7 @@ Use modern `git merge-tree` (git 2.38+) to simulate the merge without touching a
 
 ```bash
 # Modern merge-tree — exit code 0 = clean, exit code 1 = conflicts
-git merge-tree --write-tree HEAD origin/main
-echo "EXIT_STATUS: $?"
+git merge-tree --write-tree HEAD origin/main 2>&1; echo "EXIT:$?"
 ```
 
 **Important: Check the EXIT STATUS, not the output content.**
@@ -219,7 +218,7 @@ When checking conflicts against multiple branches (e.g., "will fb conflict with 
 
 ```bash
 # Check conflicts against multiple targets simultaneously
-for target in origin/main origin/bb; do
+for target in origin/main origin/<other-branch>; do
   echo "=== vs $target ==="
   git merge-tree --write-tree HEAD $target 2>&1
   echo "EXIT:$?"

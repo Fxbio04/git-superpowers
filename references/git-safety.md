@@ -99,6 +99,12 @@ git rev-parse --is-shallow-repository
 ```
 If "true", warn that history commands (log ranges, merge-base, rev-list --count) may produce incomplete results. Suggest `git fetch --unshallow` if needed.
 
+**Not a git repo:**
+```bash
+git rev-parse --is-inside-work-tree 2>/dev/null
+```
+If this fails or returns "false", inform the user. Most skills require a git repository.
+
 **Empty repo (no commits):**
 ```bash
 git rev-parse HEAD 2>/dev/null

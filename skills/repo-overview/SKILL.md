@@ -40,6 +40,8 @@ Keep the list manageable — if more than 20 repos are found, show only those wi
 
 ### Step 2: Gather Status
 
+For many repos (>5), spawn the repo-scanner agent: read `agents/repo-scanner.md` and run it as a subagent with the list of repo paths. It handles parallel fetching and status collection in minimal bash calls.
+
 IMPORTANT: Gather ALL repo data in ONE single Bash call. Do NOT run separate Bash calls per repo — that wastes time and tokens. Use this pattern:
 
 ```bash
@@ -73,11 +75,11 @@ Repo Overview (6 repos)
 
 Repo                  Branch  Behind  Ahead  Changes  Last Commit
 ──────────────────────────────────────────────────────────────────
-connector             fb        12 ⚠️     3    7 files  2 hours ago
-ews-connector         fb         0 ✓      1    0 files  1 day ago
-brognoMicroServices   fb         4 ⚠️     0    2 files  3 hours ago
-shopify-connector     fb         0 ✓      5    0 files  5 hours ago
-brognoMCP             main       0 ✓      0    0 files  2 days ago
+backend-api           fb        12 ⚠️     3    7 files  2 hours ago
+api-gateway           fb         0 ✓      1    0 files  1 day ago
+microservices         fb         4 ⚠️     0    2 files  3 hours ago
+shop-connector        fb         0 ✓      5    0 files  5 hours ago
+mcp-server            main       0 ✓      0    0 files  2 days ago
 
 ⚠️ 2 repos are behind main — consider syncing
 ```
@@ -98,7 +100,7 @@ When the user selects an action, `cd` into that repo and invoke the appropriate 
 
 After completing an action, show the updated dashboard to reflect changes (re-scan the affected repo).
 
-### Step 6: Remote Repos (nicht geklont)
+### Step 6: Remote Repos (not cloned locally)
 
 After showing local repos, check if `gh` CLI is available and authenticated:
 
@@ -116,23 +118,23 @@ gh repo list --limit 50 --json name,owner,updatedAt,defaultBranchRef --jq '.[] |
 Compare with local repos (by name matching). Show repos that exist on GitHub but not locally:
 
 ```
-Remote Repos (nicht lokal geklont):
+Remote Repos (not cloned locally):
 
-  Org/Repo                    Letztes Update
+  Org/Repo                    Last Update
   ──────────────────────────────────────────
-  myorg/new-service           vor 2 Tagen
-  myorg/internal-tools        vor 1 Woche
-  myorg/legacy-api            vor 3 Monaten
+  myorg/new-service           2 days ago
+  myorg/internal-tools        1 week ago
+  myorg/legacy-api            3 months ago
 
-  3 Repos in deinen Organisationen sind nicht lokal geklont.
-  Klonen? (Nummer oder "skip")
+  3 repos in your organizations are not cloned locally.
+  Clone? (number or "skip")
 ```
 
-If the user selects a repo to clone, ask where to put it (default: `~/source/`) and run `git clone`.
+If the user selects a repo to clone, ask the user where to clone, suggesting the common parent directory of existing local repos, and run `git clone`.
 
 Only show this section if there are actually uncloned repos. Skip silently if `gh` is not available or not authenticated — this is an optional bonus feature.
 
-### Repos von anderen Orgs (via Remote-URL erkannt)
+### Repos from Other Orgs (detected via remote URL)
 
 Some local repos may point to organizations the user isn't a member of (e.g., external collaborator). Detect these by checking remote URLs:
 
@@ -146,10 +148,10 @@ done
 Present these separately from confirmed org memberships:
 
 ```
-Repos von anderen Orgs (via Remote-URL):
+Repos from Other Orgs (via remote URL):
 
-  CPO-Concept-GmbH (kein Org-Mitglied, aber lokale Repos vorhanden):
-    connector, EWS
+  external-org (not an org member, but local repos exist):
+    repo-a, repo-b
 ```
 
 Never label these as "Collaborator" or assume the user's role — just state the fact that local repos point to this org.

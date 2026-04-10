@@ -34,6 +34,8 @@ If there are already staged files, ask the user: "Some files are already staged.
 
 ### Step 3: Topic Detection
 
+For complex changes (>10 files or many shared files), spawn the topic-analyzer agent: read `agents/topic-analyzer.md` and run it as a subagent with the list of changed files. For simpler changes, follow the strategy inline.
+
 Read `references/topic-detection.md` for the full strategy.
 
 Group all changed files by topic using progressive detail:
@@ -73,10 +75,11 @@ Ask: **"Which topics do you want to commit? (e.g. '1,3' or 'all')"**
 For **single-topic files**: simply `git add <file>`
 
 For **⚡ mixed files**: use hunk-level splitting. Read `references/hunk-analysis.md` for the detailed approach:
-1. Back up the file
-2. Edit the file to remove changes belonging to OTHER topics (revert those lines to their original state)
-3. `git add <file>`
-4. Restore the full file from backup
+1. Use `git show HEAD:<file>` to see the original state of lines that need to be reverted for selective staging
+2. Back up the file
+3. Edit the file to remove changes belonging to OTHER topics (revert those lines to their original state)
+4. `git add <file>`
+5. Restore the full file from backup
 
 ### Step 6: Verify Staging
 

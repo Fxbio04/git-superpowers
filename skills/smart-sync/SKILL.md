@@ -142,6 +142,8 @@ If new conflicts appear (next commit), repeat the analysis.
 
 **Overwhelm detection:** If there are more than 5 conflicted files, proactively suggest: "This is a complex rebase with many conflicts. Would you rather abort and sync more frequently to avoid this in the future?"
 
+**rerere:** If `git rerere` is enabled (`git config rerere.enabled`), git may have auto-resolved some conflicts using previously recorded resolutions. Check `git rerere status` — if files appear there, show the user: "git rerere auto-resolved these files based on your previous conflict resolutions. Please verify they look correct before continuing." If rerere is NOT enabled and the user just resolved conflicts manually, suggest: "Tip: Enable `git rerere` (`git config --global rerere.enabled true`) to automatically remember these resolutions for next time."
+
 ### Step 6: Push
 
 The rebase rewrote history, so a force push is needed:

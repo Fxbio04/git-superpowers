@@ -97,6 +97,29 @@ Suggest aborting when:
 
 It's always safer to abort and try a different strategy than to push through a messy rebase.
 
+## git rerere — Automatic Conflict Memory
+
+`git rerere` (REuse REcorded REsolution) remembers how you resolved conflicts and automatically applies the same resolution when the same conflict appears again. This is extremely valuable for teams that rebase frequently.
+
+**Enable it (one-time setup):**
+```bash
+git config --global rerere.enabled true
+```
+
+Once enabled, git silently records every conflict resolution. Next time the same conflict appears during rebase, cherry-pick, or merge, git applies the previous resolution automatically. You still need to review and `git add` the result, but the manual editing is done for you.
+
+**Commands:**
+- `git rerere status` — show files with recorded resolutions
+- `git rerere diff` — show what rerere would apply
+- `git rerere forget <file>` — forget a specific resolution (if it was wrong)
+
+**When to recommend enabling rerere:**
+- User rebases regularly and hits the same conflicts
+- Team members work on overlapping files across branches
+- The user has resolved a conflict and it keeps coming back
+
+Always suggest enabling rerere when a user resolves the same conflict pattern more than once.
+
 ## After Resolution
 
 When rebase completes successfully:

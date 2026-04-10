@@ -197,6 +197,8 @@ Next steps:
 - After the PR is merged, sync your other branches: run smart-sync on each
 ```
 
+**Note on GitHub Rebase:** If the repo uses "Rebase and merge" as the merge method, GitHub will create new commit SHAs even for identical changes. This means after your PR is merged, your local branch will diverge from main even though the code is the same. Run `/smart-sync` after merge to clean up.
+
 ## Rules
 
 - Never create a PR with conflict markers in the diff

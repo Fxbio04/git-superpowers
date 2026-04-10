@@ -78,21 +78,23 @@ Stop here — no need for the full simulation.
 
 ### Step 5: Run the Simulation
 
-Use `git merge-tree` to simulate the merge without touching any branch:
+Use modern `git merge-tree` (git 2.38+) to simulate the merge without touching any branch:
 
 ```bash
-MERGE_BASE=$(git merge-base HEAD origin/main)
-git merge-tree $MERGE_BASE HEAD origin/main
+# Modern merge-tree — exit code 0 = clean, exit code 1 = conflicts
+git merge-tree --write-tree HEAD origin/main
+echo "EXIT_STATUS: $?"
 ```
 
-`git merge-tree` outputs the merged result for every changed file. Conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) in the output mean real conflicts will occur.
+**Important: Check the EXIT STATUS, not the output content.**
+- Exit code `0` = clean merge, no conflicts. The output is a tree SHA.
+- Exit code `1` = conflicts detected. The output includes a tree SHA followed by a "Conflicted file info" section listing the conflicted files.
 
-Parse the output for conflict markers:
-- Count occurrences of `<<<<<<< `
-- Extract the file path from each conflict section
-- Extract the conflicting hunks from both sides
+Parse the "Conflicted file info" section from the output to extract the list of conflicted files. Do NOT try to parse the tree SHA or look for conflict markers in the merge-tree output — always rely on the exit status to determine if conflicts exist.
 
-If `merge-tree` output is ambiguous or empty, fall back to the stash-and-test approach:
+An empty conflicted file list does NOT necessarily mean a clean merge — always check the exit status first.
+
+**For older git versions** (before 2.38) that do not support `--write-tree`, fall back to the detached HEAD approach:
 
 ```bash
 # Record current state

@@ -62,6 +62,8 @@ For a deeper simulation with severity analysis, suggest: "Run `/conflict-simulat
 
 ### Step 2: Audit
 
+Run all audit checks in a single pass over the diff output — read `git diff origin/<branch>..HEAD` once and scan for all patterns simultaneously. Do not read the diff separately for each check.
+
 Run these checks against the outgoing diff (`git diff origin/<branch>..HEAD`):
 
 **Check 1: Debug Artifacts**

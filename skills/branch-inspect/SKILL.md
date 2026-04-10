@@ -18,6 +18,8 @@ git fetch origin --quiet
 git branch -r --sort=-committerdate --format='%(refname:short) %(committerdate:relative) %(authorname)'
 ```
 
+Run `git fetch origin --quiet` at the start. If inspecting multiple repos, fetch all in parallel before displaying results.
+
 Filter out `origin/HEAD` and present:
 
 ```

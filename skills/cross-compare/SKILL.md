@@ -40,6 +40,8 @@ git branch -r --sort=-committerdate --format='%(refname:short)'
 
 For each remote branch (excluding `origin/HEAD`), check whether it has any changes to the target path compared to the common merge-base:
 
+When comparing a path across N branches, gather all diffs in parallel — run one `git diff --stat` per branch simultaneously rather than sequentially.
+
 ```bash
 git diff --name-only origin/main...origin/<branch> -- <path>
 ```

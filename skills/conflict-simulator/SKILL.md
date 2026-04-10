@@ -212,3 +212,16 @@ git show <commit> -- <file>
 - Never run `git rebase` as a simulation — it modifies branch history and cannot be reliably undone in all failure cases
 - Severity ratings are estimates — flag as Hard when uncertain, not Easy
 - Proactive use: safe-push and smart-sync should invoke this skill when overlapping files are detected between the outgoing branch and the target base
+
+## Multi-Branch Simulation
+
+When checking conflicts against multiple branches (e.g., "will fb conflict with bb AND main?"), run simulations in parallel:
+
+```bash
+# Check conflicts against multiple targets simultaneously
+for target in origin/main origin/bb; do
+  echo "=== vs $target ==="
+  git merge-tree --write-tree HEAD $target 2>&1
+  echo "EXIT:$?"
+done
+```

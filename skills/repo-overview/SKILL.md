@@ -38,6 +38,16 @@ git -C <path> status --porcelain | wc -l
 git -C <path> log --oneline -1 --format='%cr'
 ```
 
+Run these commands in parallel across all repos — launch one Bash call per repo or batch them in a single script. Do not run them sequentially repo by repo, as each fetch adds latency. Example:
+
+```bash
+# Parallel: run all fetches at once in background
+for path in $REPOS; do
+  git -C "$path" fetch origin --quiet 2>/dev/null &
+done
+wait
+```
+
 Handle repos without a remote or without `origin/main` — fall back to `origin/master` or show "no remote".
 
 ### Step 3: Display Dashboard
@@ -105,6 +115,28 @@ Remote Repos (nicht lokal geklont):
 If the user selects a repo to clone, ask where to put it (default: `~/source/`) and run `git clone`.
 
 Only show this section if there are actually uncloned repos. Skip silently if `gh` is not available or not authenticated — this is an optional bonus feature.
+
+### Repos von anderen Orgs (via Remote-URL erkannt)
+
+Some local repos may point to organizations the user isn't a member of (e.g., external collaborator). Detect these by checking remote URLs:
+
+```bash
+for path in $REPOS; do
+  remote_url=$(git -C "$path" remote get-url origin 2>/dev/null)
+  # Extract org from URL
+done
+```
+
+Present these separately from confirmed org memberships:
+
+```
+Repos von anderen Orgs (via Remote-URL):
+
+  CPO-Concept-GmbH (kein Org-Mitglied, aber lokale Repos vorhanden):
+    connector, EWS
+```
+
+Never label these as "Collaborator" or assume the user's role — just state the fact that local repos point to this org.
 
 ## Token Efficiency
 

@@ -4,7 +4,6 @@ Claude Code Skills für intelligente Git-Workflows. Topic-basierte Commits, smar
 
 ## Das Problem
 
-Teams die in Feature-Branches arbeiten kennen das:
 - **Vermischte Änderungen** — mehrere Features und Bugfixes in derselben Branch, teilweise in denselben Dateien
 - **Merge-Conflict-Chaos** — beim Rebase von main entstehen Conflicts in Dateien die Änderungen aus verschiedenen Topics enthalten
 - **Unfertiges wird mitgepusht** — halbfertige Features landen versehentlich im Commit

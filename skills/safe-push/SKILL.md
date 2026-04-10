@@ -35,6 +35,28 @@ e7f8g9h chore(deps): update react-charts
 12 files changed, 340 insertions, 45 deletions
 ```
 
+### Step 1.5: Conflict Prediction
+
+Before auditing code quality, check if your branch will have conflicts when rebasing onto main later. This uses the conflict-simulator approach:
+
+```bash
+# Quick overlap check: files changed in both your branch and main
+comm -12 \
+  <(git diff --name-only origin/main..HEAD | sort) \
+  <(git diff --name-only HEAD..origin/main | sort)
+```
+
+If overlapping files exist, warn:
+```
+⚠️ Conflict prediction: 2 files overlap with main
+  src/routes.tsx — you and main both modified this
+  package.json — different dependency changes
+
+Consider running /smart-sync before pushing to avoid conflicts later.
+```
+
+If no overlap: continue silently (don't clutter the output).
+
 ### Step 2: Audit
 
 Run these checks against the outgoing diff (`git diff origin/<branch>..HEAD`):

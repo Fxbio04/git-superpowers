@@ -1,13 +1,18 @@
 ---
 name: hotfix
-description: Emergency fix workflow — stash current work, branch from main, apply the fix, push, and create a PR marked as HOTFIX. Use when production is broken and speed matters, or the user says things like "production is broken", "hotfix needed", "notfall", "production bug", "schnell fixen und deployen", "emergency fix", "dringend", "kritischer bug", "prod ist down", or "sofort fixen". Also triggers on /hotfix.
+description: Emergency fix — stash work, branch from main, fix, audit, PR, return to previous branch. Triggers: hotfix, "production is broken", "notfall", "prod ist down", "dringend", "kritischer bug", /hotfix.
 ---
 
 # Hotfix
 
 Apply an emergency fix to production without contaminating your in-progress work. This workflow is optimized for speed — it minimizes questions and moves in a straight line from broken to fixed.
 
-Read `references/git-safety.md` before your first action. Even under time pressure, the secret scan and conflict markers check are non-negotiable.
+## Safety (always apply — even under time pressure)
+- Secret scan and conflict marker check are non-negotiable
+- Never `git add .` — stage specific files only
+- Always start hotfix from `origin/main` (freshly fetched), never from a feature branch
+- Always return user to their original branch at the end
+- See `references/git-safety.md` for secret patterns
 
 ## Workflow
 
@@ -216,10 +221,14 @@ Run the conflict resolution from `references/conflict-resolution.md`.
 After the hotfix PR is merged, the main branch will have changed. Remind the user:
 
 ```
-After the hotfix is merged to main, sync your branch:
-  Run smart-sync on <previous-branch> to get the fix into your work.
+After the hotfix is merged to main, sync your branches:
 
-This prevents conflicts later and ensures your branch builds on the fixed production code.
+What's next?
+[s] Run /smart-sync on <previous-branch> to get the fix into your work
+[o] Run /repo-overview to sync all repos
+[d] Done — I'll sync later
+
+Syncing prevents conflicts later and ensures your branches build on the fixed production code.
 ```
 
 ## Rules

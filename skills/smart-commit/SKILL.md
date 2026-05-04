@@ -1,13 +1,18 @@
 ---
 name: smart-commit
-description: Intelligently group and selectively commit changes by topic with hunk-level precision. Use when the user wants to commit changes, push specific features, selectively stage files, commit only part of their work, separate mixed changes into logical commits, or asks things like "commit the bugfix but not the feature work", "push only amazon changes", "was soll ich committen", "commit nach themen", or "nur die fixes committen". Also triggers on /smart-commit.
+description: Group and commit changes by topic with hunk-level splitting. Triggers: commit, stage, push changes, "commit the bugfix not the feature", "nur die fixes committen", "commit nach themen", /smart-commit.
 ---
 
 # Smart Commit
 
-Commit changes grouped by topic — not by file. When a single file contains changes from multiple topics (a bugfix AND a feature), this skill splits them at hunk level so each commit is clean and focused.
+Commit changes grouped by topic — not by file. When a single file contains changes from multiple topics (a bugfix AND a feature), this skill splits them at hunk level (individual blocks of changed lines) so each commit is clean and focused.
 
-Read `references/git-safety.md` before your first action — it contains proactive checks that apply to every step below.
+## Safety (always apply)
+- Never `git add .` or `git add -A` — always stage specific files
+- Never `--force` — use `--force-with-lease`
+- Confirm before destructive operations (reset --hard, force push)
+- Scan for secrets before push (see `references/git-safety.md` for patterns)
+- Check for detached HEAD, missing remote, shallow clone before starting
 
 ## Workflow
 
@@ -34,7 +39,7 @@ If there are already staged files, ask the user: "Some files are already staged.
 
 ### Step 3: Topic Detection
 
-For complex changes (>10 files or many shared files), spawn the topic-analyzer agent: read `agents/topic-analyzer.md` and run it as a subagent with the list of changed files. For simpler changes, follow the strategy inline.
+For complex changes (>10 files or many shared files), spawn the `git-superpowers:topic-analyzer` agent with the list of changed files and repo path. For simpler changes, follow the strategy inline.
 
 Read `references/topic-detection.md` for the full strategy.
 
@@ -47,34 +52,37 @@ For each file, determine if it contains changes from multiple topics. If yes, ma
 
 ### Step 4: Present Topics
 
-Show the grouped overview:
-
-```
-Topics detected:
-
-[1] Login Bugfix (3 files)
-    M  src/auth/login.tsx
-    M  src/auth/redirect.ts
-    M  src/utils/url.ts
-
-[2] Amazon Analytics (5 files)
-    A  src/amazon/dashboard.tsx
-    A  src/amazon/charts.tsx
-    M  src/utils/url.ts ⚡ (shared with Topic 1)
-
-[3] Dependency Updates (1 file)
-    M  package.json
-
-⚡ = file contains changes from multiple topics (will be split at hunk level)
-```
+Show a numbered list of topics with their files. Format: `[N] Topic Name (X files)` followed by file list with `M/A/D` status. Mark mixed-topic files with ⚡. Explain ⚡ means "contains changes from multiple topics — will be split at hunk level (only the parts belonging to your chosen topic get committed)."
 
 Ask: **"Which topics do you want to commit? (e.g. '1,3' or 'all')"**
 
+### Step 4.5: Commit Strategy
+
+After the user selects topics, ask how they want to commit them:
+
+```
+How should these be committed?
+
+[s] Separate commits — one per topic (recommended — keeps history clean and reviewable)
+[c] Combined — all selected topics in one commit (simpler, but harder to review later)
+[q] Quick — commit everything, auto-generate message, skip review (for when you know what you're doing)
+```
+
+**Separate (default):** Each topic gets its own commit with a focused message. This is the standard flow — continue to Step 5.
+
+**Combined:** Stage all selected files at once, write one commit message that covers all topics. Skip the loop in Step 10.
+
+**Quick mode:** Stage all files from selected topics, generate a commit message automatically, commit without asking for message confirmation, and show `git diff --cached --stat` only as a summary (not as a question). Useful when the user says things like "schnell committen", "just commit it", "alles rein". Still respects all safety rules (no `git add .`, secret scan if pushing).
+
+If only 1 topic was selected, skip this question and go straight to Step 5 (there's nothing to combine).
+
 ### Step 5: Stage Selected Topics
+
+Staging means marking files as "ready to commit" — only staged files go into the commit.
 
 For **single-topic files**: simply `git add <file>`
 
-For **⚡ mixed files**: use hunk-level splitting. Read `references/hunk-analysis.md` for the detailed approach:
+For **⚡ mixed files** (files with changes from multiple topics): use hunk-level splitting to stage only the relevant parts. Read `references/hunk-analysis.md` for the detailed approach:
 1. Use `git show HEAD:<file>` to see the original state of lines that need to be reverted for selective staging
 2. Back up the file
 3. Edit the file to remove changes belonging to OTHER topics (revert those lines to their original state)
@@ -95,7 +103,7 @@ If the user spots something wrong, `git reset HEAD <file>` for the problematic f
 
 ### Step 7: Commit Message
 
-Propose a commit message using Conventional Commits:
+Propose a commit message using Conventional Commits (a standard format that makes commit history easy to read):
 
 **Prefix** based on change type:
 - `feat:` — new functionality
@@ -107,18 +115,7 @@ Propose a commit message using Conventional Commits:
 
 **Scope** from the topic: `feat(auth):`, `fix(amazon):`, `chore(deps):`
 
-Show the proposed message and ask for confirmation:
-```
-Proposed commit message:
-
-feat(amazon): add analytics dashboard with KPI grid and charts
-
-- DashboardView with KPI cards and trend visualization
-- ProductAnalysisView with cluster filtering
-- ReturnsAnalysisView for returns analysis
-
-OK, or would you like to change it?
-```
+Show the proposed message and ask for confirmation. Let the user edit or accept with Enter.
 
 ### Step 8: Commit
 
@@ -149,13 +146,25 @@ If remote has new commits, warn and suggest `git pull --rebase origin <branch>` 
 
 Then push: `git push origin <branch>`
 
-### Step 10: Loop
+### Step 10: Loop and Next Steps
 
 ```bash
 git status
 ```
 
 If more changes remain, show them grouped by topic again and ask: "More topics to commit?"
+
+If no changes remain (or the user is done):
+
+```
+All done. Next steps:
+[r] Run /diff-review to check for bugs before pushing
+[p] Run /safe-push to audit and push
+[pr] Run /pr-prep to create a pull request
+[d] Done — nothing else needed
+```
+
+Skip this menu in quick mode — just show "Committed. Run `/safe-push` when ready to push."
 
 ## Rules
 

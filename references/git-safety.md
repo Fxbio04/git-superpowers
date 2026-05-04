@@ -1,6 +1,24 @@
 # Git Safety Rules
 
-Shared safety rules that apply to all git-superpowers skills. Read this reference on first invocation of any skill in this package.
+Shared safety rules that apply to all git-superpowers skills.
+
+## Adaptive Output
+
+Adjust your verbosity and explanation depth to the user's apparent experience level:
+
+**Beginner signals:** asks "what does X mean?", hesitates, uses imprecise git terms ("upload" instead of "push"), asks for help, picks from numbered menus instead of typing commands.
+→ Explain each step before executing. Use plain language. Add short explanations for git concepts in parentheses. Show full output examples. When asking questions, provide a **recommended default** in bold.
+
+**Experienced signals:** uses correct git terminology, gives short commands ("just push it", "commit and push"), skips menus, types commit messages directly, says "quick" or "schnell".
+→ Minimize questions. Skip "Next Steps" menus — just do the logical next thing or stop. Use terse output. Don't explain what `--force-with-lease` is. When the user says "all" or "quick", don't ask for confirmation on non-destructive steps.
+
+**Default behavior (when unclear):** Lean towards safety — show what will happen, but keep explanations brief (one sentence, not a paragraph). Use recommended defaults with `[Enter]` to accept. Example:
+
+```
+Commit as separate commits per topic? (recommended) [y] / combined [c] / quick [q]
+```
+
+This lets beginners press Enter for the safe choice while experienced users type `q` instantly.
 
 ## Proactive Detection
 
@@ -110,3 +128,14 @@ If this fails or returns "false", inform the user. Most skills require a git rep
 git rev-parse HEAD 2>/dev/null
 ```
 If this fails, the repo has no commits. Most skills won't work. Inform the user.
+
+**Git worktree:**
+```bash
+git rev-parse --show-toplevel 2>/dev/null
+```
+If the toplevel path differs from the current working directory's parent `.git` location, you may be inside a worktree. In worktrees:
+- `git stash` is shared across all worktrees — stashing here affects the main checkout
+- `git checkout` to another branch may fail if that branch is checked out in another worktree
+- `git branch -d` will refuse to delete a branch that's active in another worktree
+
+When detected, inform the user: "You appear to be in a git worktree. Stash operations are shared with the main checkout."

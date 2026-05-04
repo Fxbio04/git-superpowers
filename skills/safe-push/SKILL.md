@@ -1,13 +1,18 @@
 ---
 name: safe-push
-description: Pre-push audit that scans outgoing commits for issues and fixes them before pushing. Use when the user wants to push changes, make sure their push is clean, check for problems before pushing, or says things like "push my changes", "is it safe to push", "push to origin", "check before push", "pushen", "ab damit", or "hochladen". Also triggers on /safe-push. Catches debug statements, forgotten conflict markers, secrets, incomplete features, and other common mistakes — then offers to fix them directly.
+description: Pre-push audit — scans for debug statements, secrets, conflict markers, incomplete features and fixes them. Triggers: push, "pushen", "ab damit", "hochladen", "check before push", /safe-push.
 ---
 
 # Safe Push
 
 Audit outgoing commits for common mistakes and fix them before pushing. This is not just a linter — it understands your code, catches semantic issues (unused imports from an unfinished feature, missing files that a component depends on), and actively fixes what it finds.
 
-Read `references/git-safety.md` before your first action.
+## Safety (always apply)
+- Never push without showing what goes out first
+- Always scan for secrets before push (see `references/git-safety.md` for patterns)
+- Never `git add .` — stage specific files only
+- Create separate cleanup commits (never amend already-pushed commits)
+- Check for detached HEAD, missing remote, shallow clone before starting
 
 ## Workflow
 
@@ -25,15 +30,7 @@ Show the outgoing commits and a file summary:
 git diff --stat origin/<branch>..HEAD
 ```
 
-```
-3 commits to push to origin/fb:
-
-a1b2c3d feat(amazon): add analytics dashboard
-d4e5f6g fix(auth): login redirect bugfix
-e7f8g9h chore(deps): update react-charts
-
-12 files changed, 340 insertions, 45 deletions
-```
+Format: "N commits to push to origin/`<branch>`:" followed by commit list and file change summary.
 
 ### Step 1.5: Conflict Prediction
 
@@ -100,24 +97,7 @@ Safe Push Audit ✓
 Push to origin/fb? (y/n)
 ```
 
-If issues found, show them numbered and offer fixes:
-
-```
-Safe Push Audit for fb → origin/fb
-
-3 commits, 12 files
-
-✓ No secrets found
-✓ No conflict markers
-
-Issues found:
-[1] console.log in src/amazon/dashboard.tsx:45 — "console.log('debug data', data)"
-[2] console.log in src/amazon/dashboard.tsx:89 — "console.log('render')"
-[3] Missing file: src/amazon/ProductChart.tsx is imported but not in this push
-[4] TODO in src/utils/api.ts:12 — "TODO: add error handling for timeout"
-```
-
-Then ask the user which issues to fix (they can pick multiple): **"Which issues should I fix?"**
+If issues found, show them numbered with file:line and the actual code. Show ✓ for passed checks. Then ask which issues to fix (they can pick numbers, "all", or "ignore").
 - Each numbered issue as an option
 - "Fix all"
 - "Ignore and push anyway"
@@ -157,12 +137,36 @@ git push origin <branch>
 ```
 
 If push fails due to remote changes:
+
+```
+Push failed — the remote has new commits you don't have yet.
+
+Options:
+[1] Run /smart-sync to rebase onto the latest remote (recommended — handles conflicts)
+[2] Quick pull --rebase (only if you're confident there won't be conflicts)
+```
+
+If the user chooses option 2:
 ```bash
 git pull --rebase origin <branch>
 ```
-Then retry the push. If rebase causes conflicts, suggest running smart-sync instead.
 
-Show confirmation: "Pushed 4 commits to origin/fb ✓"
+If `pull --rebase` causes conflicts, **abort immediately** and redirect to smart-sync:
+```bash
+git rebase --abort
+```
+"Conflicts during pull. Run `/smart-sync` for guided conflict resolution."
+
+Show confirmation and suggest next steps:
+
+```
+Pushed 4 commits to origin/fb ✓
+
+What's next?
+[pr] Run /pr-prep to create a pull request
+[o]  Run /repo-overview to check other repos
+[d]  Done
+```
 
 ## Rules
 

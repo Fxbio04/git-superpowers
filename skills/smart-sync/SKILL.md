@@ -1,13 +1,17 @@
 ---
 name: smart-sync
-description: Rebase your branch onto main with intelligent, topic-aware conflict resolution. Use when the user wants to sync their branch, pull from main, update from main, rebase, get the latest changes, resolve merge conflicts, or says things like "sync my branch", "rebase from main", "ich muss den neusten Stand ziehen", "main in meine branch holen", "merge conflicts lösen", or "branch aktualisieren". Also triggers on /smart-sync. Use this instead of raw git rebase — it analyzes conflicts by topic and guides resolution.
+description: Rebase onto main with topic-aware conflict resolution. Triggers: sync, rebase, pull from main, "neusten Stand ziehen", "branch aktualisieren", "merge conflicts lösen", /smart-sync.
 ---
 
 # Smart Sync
 
 Rebase your branch onto main with topic-aware conflict resolution. Instead of presenting conflicts as raw file diffs, this skill groups them by topic and guides you through resolution with clear explanations of what each side changed and why.
 
-Read `references/git-safety.md` before your first action.
+## Safety (always apply)
+- Never `git merge` — always `git rebase`
+- Never `--force` — use `--force-with-lease`
+- During rebase: `--ours` = main, `--theirs` = your branch (inverted!)
+- Confirm before destructive operations; check for detached HEAD/missing remote first
 
 ## Workflow
 
@@ -70,6 +74,27 @@ If there's overlap, warn: "These files were changed in both main and your branch
 
 **Tip:** Run `/conflict-simulator` first to preview conflicts without starting the rebase.
 
+### Step 2.5: Check for Merge Commits
+
+Before rebasing, check if the branch contains merge commits — these cause problems during rebase:
+
+```bash
+git log --merges origin/main..HEAD --oneline
+```
+
+If merge commits exist, warn:
+```
+⚠️ Your branch contains merge commits. A standard rebase will flatten
+these into individual commits, which can cause repeated conflicts.
+
+Options:
+[1] Rebase with --rebase-merges (preserves merge structure)
+[2] Standard rebase (flattens merges — simpler but may cause more conflicts)
+[3] Abort — I'll clean up the branch first
+```
+
+If option 1: use `git rebase --rebase-merges origin/main`
+
 ### Step 3: Rebase
 
 ```bash
@@ -80,7 +105,7 @@ If it succeeds without conflicts → skip to Step 6.
 
 ### Step 4: Conflict Analysis
 
-When conflicts occur, analyze them by topic. For complex conflicts (>3 files), spawn the conflict-resolver agent: read `agents/conflict-resolver.md` and run it as a subagent. For simpler cases, resolve inline.
+When conflicts occur, analyze them by topic. For complex conflicts (>3 files), spawn the `git-superpowers:conflict-resolver` agent with the repo path and list of conflicted files. For simpler cases, resolve inline.
 
 Read `references/conflict-resolution.md` for the full strategy.
 
@@ -170,7 +195,17 @@ git log --oneline <branch>..origin/main
 ```
 Should be empty (Behind: 0).
 
-Show summary: "Branch synced. 12 commits from main applied. 3 conflicts resolved. Behind main: 0."
+Show summary and suggest next steps:
+
+```
+Branch synced. 12 commits from main applied. 3 conflicts resolved. Behind main: 0.
+
+What's next?
+[c] Run /smart-commit if you have uncommitted changes
+[p] Run /safe-push to push your branch
+[o] Run /repo-overview to check other repos
+[d] Done
+```
 
 ## Rules
 

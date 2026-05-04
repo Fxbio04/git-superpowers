@@ -1,13 +1,16 @@
 ---
 name: cross-compare
-description: Compare how a specific module, service, or file looks across multiple branches side-by-side. Use when the user wants to see how a particular area of code differs between branches, or says things like "how does amazon look in fb vs bb vs main", "compare routes.tsx across branches", "vergleich die branches", "wie sieht der code in den anderen branches aus", "show me that component in all branches", "was hat sich geändert in den anderen branches", or "which branch has the latest version of X". Also triggers on /cross-compare.
+description: Compare a file or module across branches side-by-side with collision forecast. Triggers: "vergleich die branches", "compare X across branches", "wie sieht der code in den anderen branches aus", /cross-compare.
 ---
 
 # Cross-Compare
 
 Compare a specific file, module, or directory across all branches that have touched it. Instead of switching branches manually, this skill builds a side-by-side picture of how different branches diverge on the same code — and flags which branches would collide if merged.
 
-Read `references/git-safety.md` before your first action.
+## Safety (always apply)
+- Always `git fetch origin` before comparing — stale refs give wrong results
+- Use `--stat` first, full diffs only on explicit request
+- Check for detached HEAD and missing remote before starting
 
 ## Workflow
 
@@ -62,24 +65,7 @@ git diff --stat origin/main...origin/<branch> -- <path>
 git log --oneline origin/main..origin/<branch> -- <path>
 ```
 
-Format the output as a comparison table:
-
-```
-Comparison for src/amazon/ across branches:
-
-┌─────────────────────────────────────────────────────────────────┐
-│ Branch    │ Commits │ +Lines │ -Lines │ Summary                  │
-├─────────────────────────────────────────────────────────────────┤
-│ origin/fb │ 4       │ +312   │ -18    │ new dashboard, 3 charts  │
-│ origin/bb │ 2       │ +45    │ -120   │ refactored API calls      │
-│ origin/it │ 0       │ —      │ —      │ unchanged from main       │
-│ main      │ baseline│        │        │ original                  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-For each branch with changes, write a one-sentence human summary based on commit messages and file names. Examples:
-- "fb: added analytics dashboard with KPI grid and 3 chart components"
-- "bb: replaced inline fetch calls with a centralized API client"
+Format as a comparison table: Branch | Commits | +Lines | -Lines | Summary. For each branch with changes, write a one-sentence human summary from commit messages.
 
 ### Step 4: Conflict Prediction
 
@@ -92,18 +78,7 @@ comm -12 \
   <(git diff --unified=0 origin/main...origin/<branch-B> -- <path> | grep '^@@' | grep -oE '\+[0-9]+' | tr -d '+' | sort)
 ```
 
-Report collision risk for each pair:
-
-```
-Merge Collision Forecast:
-
-fb ↔ bb: HIGH RISK
-  Both modified src/amazon/api.ts — fb added new functions, bb restructured existing ones.
-  Merging bb to main first would force fb to resolve conflicts in that file.
-
-fb ↔ it: NO CONFLICT
-  it has no changes to src/amazon/ — safe to merge in any order.
-```
+Report collision risk for each pair of branches that both modified the target. Format: `branch_a ↔ branch_b: RISK_LEVEL` with a one-line explanation.
 
 Risk levels:
 - **HIGH**: Both branches modified the same file in overlapping line ranges

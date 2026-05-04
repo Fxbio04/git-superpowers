@@ -1,15 +1,18 @@
 ---
 name: diff-review
-description: AI-powered semantic code review of your staged or unstaged changes before committing. Use when the user wants to review their changes, check code quality, validate readiness to commit, or says things like "review my changes", "check my code", "is this ready to commit", "code review", "schau dir meine änderungen an", "review before commit", "was hab ich geändert", "check before commit", or "look at my diff". Also triggers on /diff-review. This is a senior-developer review — semantic understanding of logic, security, and correctness — not a linter.
+description: Senior-dev code review of your diff — finds bugs, security issues, async mistakes, not style. Triggers: "review my changes", "check my code", "schau dir meine änderungen an", "code review", /diff-review.
 ---
 
 # Diff Review
 
 Review your changes for real problems before they become commits. This skill reasons about logic, security, async correctness, and consistency — not whitespace and style. Fewer findings that actually matter, not 20 nitpicks.
 
-Read `references/git-safety.md` before your first action.
+## Safety (always apply)
+- Never create a commit in this skill — the user commits when ready
+- Only flag real correctness/security/reliability issues, not style preferences
+- Apply fixes directly to files, don't just describe them
 
-For large diffs (>500 lines), spawn the code-reviewer agent: read `agents/code-reviewer.md` and run it as a subagent. This keeps the main conversation clean while the review runs.
+For large diffs (>500 lines), spawn the `git-superpowers:code-reviewer` agent with the diff output. This keeps the main conversation clean while the review runs.
 
 ## Workflow
 
@@ -103,48 +106,9 @@ For each changed file, reason through these categories. Only flag something if t
 
 Group findings by severity. Only include severities that have at least one finding.
 
-```
-Diff Review — 4 files changed
+Format findings grouped by severity: 🔴 CRITICAL → 🟡 WARNING → 🟢 SUGGESTION. Each finding must include: numbered ID, file:line, the actual code, what is wrong and why, and a concrete fix. End with a count summary.
 
-🔴 CRITICAL (must fix before committing)
-─────────────────────────────────────────
-[1] src/api/orders.ts:34
-    const result = JSON.parse(response.body)
-    No try/catch around JSON.parse on external API data. A malformed response
-    will crash the function.
-    Fix: wrap in try/catch and return an error state on parse failure.
-
-🟡 WARNING (should fix)
-────────────────────────
-[2] src/hooks/useProducts.ts:18
-    Missing await: fetchProducts() is called without await — the component
-    will render before data arrives.
-    Fix: add await, or handle the Promise explicitly.
-
-[3] src/components/Table.tsx:67
-    <div dangerouslySetInnerHTML={{ __html: item.description }}>
-    item.description comes from user input — this is an XSS vector.
-    Fix: sanitize with DOMPurify before rendering, or use a text node instead.
-
-🟢 SUGGESTION (optional)
-─────────────────────────
-[4] src/utils/format.ts:12
-    import { formatDate } from './dates' — this import is never used in the
-    added code.
-    Fix: remove the import.
-
-3 issues require attention. 1 suggestion.
-```
-
-If there are no issues:
-```
-Diff Review — 4 files changed
-
-Looks good. No significant issues found.
-
-The changes are logically consistent, error boundaries are handled, and
-no security concerns were detected. Ready to commit.
-```
+If no issues: say so confidently — "No significant issues found. Ready to commit." is a valid and useful result.
 
 ### Step 6: Fix Selected Issues
 
@@ -188,4 +152,11 @@ If more issues are visible in the updated diff that weren't there before (fixes 
 
 ## Next Steps
 
-After reviewing, use `/smart-commit` to commit your changes or `/safe-push` to push them.
+After the review is complete (issues fixed or none found), offer:
+
+```
+Review complete. What's next?
+[c] Run /smart-commit to commit these changes
+[p] Run /safe-push to push (if already committed)
+[n] Nothing — I'll continue working
+```

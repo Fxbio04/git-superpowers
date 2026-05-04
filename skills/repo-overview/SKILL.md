@@ -1,13 +1,16 @@
 ---
 name: repo-overview
-description: Multi-repo dashboard showing the status of all your git repositories at a glance. Use when the user wants to see the state of their repos, check which branches are behind, get an overview of all projects, find uncommitted work across repos, or says things like "show me all repos", "welche repos sind behind", "repo status", "wo steh ich überall", "overview of my projects", or "was hab ich noch offen". Also triggers on /repo-overview.
+description: Multi-repo dashboard — branch status, ahead/behind, uncommitted changes across all repos. Triggers: repo status, "wo steh ich überall", "welche repos sind behind", "was hab ich offen", /repo-overview.
 ---
 
 # Repo Overview
 
 Scan all your git repositories and show a dashboard with branch status, ahead/behind counts, and uncommitted changes. Then offer to take action on any repo.
 
-Read `references/git-safety.md` before your first action.
+## Safety (always apply)
+- Never batch-sync all repos — each sync needs individual attention
+- Confirm before destructive operations
+- Handle repos without remote or in detached HEAD gracefully
 
 ## Workflow
 
@@ -21,26 +24,32 @@ Use these sources in order — stop as soon as you have results:
 
 **3. macOS Spotlight (instant, no disk scan):**
 ```bash
-mdfind "kMDItemFSName == '.git'" -onlyin ~ 2>/dev/null | sed 's/\/.git$//' | sort -u
+mdfind "kMDItemFSName == '.git'" -onlyin ~ 2>/dev/null \
+  | grep -v 'node_modules\|\.cache\|\.claude/plugins\|Library\|\.Trash\|\.npm\|\.nvm\|Caches' \
+  | sed 's/\/.git$//' | sort -u
 ```
 
 **4. Linux locate (fast, uses index):**
 ```bash
-locate -r '/\.git$' 2>/dev/null | grep "^$HOME" | sed 's/\/.git$//' | sort -u
+locate -r '/\.git$' 2>/dev/null | grep "^$HOME" \
+  | grep -v 'node_modules\|\.cache\|\.claude/plugins\|Library\|\.Trash\|\.npm\|\.nvm\|Caches' \
+  | sed 's/\/.git$//' | sort -u
 ```
 
 **5. Fallback (slow, only if nothing else works):**
 ```bash
-find ~ -maxdepth 4 -name ".git" -type d 2>/dev/null | sed 's/\/.git$//' | sort -u
+find ~ -maxdepth 4 -name ".git" -type d \
+  -not -path "*/node_modules/*" -not -path "*/.cache/*" \
+  -not -path "*/.claude/plugins/*" -not -path "*/Library/*" \
+  -not -path "*/.Trash/*" -not -path "*/.npm/*" -not -path "*/.nvm/*" \
+  2>/dev/null | sed 's/\/.git$//' | sort -u
 ```
-
-Filter out irrelevant results: skip paths containing `node_modules`, `.cache`, `.claude/plugins`, `Library`, `.Trash`.
 
 Keep the list manageable — if more than 20 repos are found, show only those with recent activity (committed within last 30 days).
 
 ### Step 2: Gather Status
 
-For many repos (>5), spawn the repo-scanner agent: read `agents/repo-scanner.md` and run it as a subagent with the list of repo paths. It handles parallel fetching and status collection in minimal bash calls.
+For many repos (>5), spawn the `git-superpowers:repo-scanner` agent with the list of repo paths. It handles parallel fetching and status collection in minimal bash calls.
 
 IMPORTANT: Gather ALL repo data in ONE single Bash call. Do NOT run separate Bash calls per repo — that wastes time and tokens. Use this pattern:
 
@@ -70,21 +79,7 @@ Handle repos without a remote or without `origin/main` — fall back to `origin/
 
 ### Step 3: Display Dashboard
 
-```
-Repo Overview (6 repos)
-
-Repo                  Branch  Behind  Ahead  Changes  Last Commit
-──────────────────────────────────────────────────────────────────
-backend-api           fb        12 ⚠️     3    7 files  2 hours ago
-api-gateway           fb         0 ✓      1    0 files  1 day ago
-microservices         fb         4 ⚠️     0    2 files  3 hours ago
-shop-connector        fb         0 ✓      5    0 files  5 hours ago
-mcp-server            main       0 ✓      0    0 files  2 days ago
-
-⚠️ 2 repos are behind main — consider syncing
-```
-
-Sort by: repos with issues first (behind, uncommitted changes), then clean repos.
+Format as a table with columns: Repo, Branch, Behind, Ahead, Changes, Last Commit. Use ⚠️ for repos behind main, ✓ for up-to-date. Sort by: repos with issues first (behind, uncommitted changes), then clean repos. End with a summary line counting repos that need attention.
 
 ### Step 4: Offer Actions
 
@@ -155,6 +150,14 @@ Repos from Other Orgs (via remote URL):
 ```
 
 Never label these as "Collaborator" or assume the user's role — just state the fact that local repos point to this org.
+
+## Next Steps
+
+After the dashboard, proactively suggest actions based on the data:
+
+- If repos are behind main: "X repos are behind main. Run `/smart-sync` on them?"
+- If repos have uncommitted changes: "X repos have uncommitted work. Want to commit? (`/smart-commit`)"
+- If everything is clean: "All repos look good. ✓"
 
 ## Token Efficiency
 

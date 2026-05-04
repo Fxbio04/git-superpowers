@@ -1,13 +1,17 @@
 ---
 name: git-history
-description: Deep dive into the history of a file, function, or line range — understand who changed it, when, and why. Use when the user wants to trace code history, investigate a change, or asks things like "who changed this function", "when was this file last modified", "why does this code look like this", "git blame", "wer hat das geändert", "history of this file", "was ist mit dieser datei passiert", "show me the history", "wann wurde das geändert", "wer hat das gemacht", or "warum sieht das so aus". Also triggers on /git-history.
+description: File/function/line history as a readable narrative — who changed what, when, and why. Triggers: blame, history, "wer hat das geändert", "warum sieht das so aus", "who changed this", /git-history.
 ---
 
 # Git History
 
 Investigate the history of a file, function, or specific lines. The goal is a narrative — not a wall of commit hashes. Start with summaries, go deep only when needed.
 
-Read `references/git-safety.md` and `references/branch-history.md` for command patterns before starting.
+## Safety (always apply)
+- Never run `git log` without a range or limit — unbounded output wastes tokens
+- Start with `--oneline` summaries, full diffs only when asked
+- Use `--follow` to track files across renames
+- See `references/branch-history.md` for efficient command patterns
 
 ## Workflow
 

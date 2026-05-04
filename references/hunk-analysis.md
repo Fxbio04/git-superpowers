@@ -70,3 +70,21 @@ Show both outputs to the user for confirmation before proceeding.
 - Always verify with `git diff --cached` after staging
 - If anything looks wrong, `git reset HEAD <file>` to unstage and start over
 - Never lose changes — the working directory must always retain all modifications after staging
+
+## Cleanup on Failure
+
+If the process is interrupted between backup and restore, `.full-backup` files may be left behind. After any hunk-level staging operation, always verify no backup files remain:
+
+```bash
+find . -name "*.full-backup" -not -path "./.git/*" 2>/dev/null
+```
+
+If found, restore them:
+```bash
+for f in $(find . -name "*.full-backup" -not -path "./.git/*"); do
+  original="${f%.full-backup}"
+  mv "$f" "$original"
+done
+```
+
+Skills using this reference should check for leftover `.full-backup` files at the start of their workflow and offer to restore them.

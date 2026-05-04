@@ -1,13 +1,18 @@
 ---
 name: commit-split
-description: Split an existing commit into multiple smaller, focused commits — one topic per commit. Use when the user's last commit contains mixed concerns, when a commit is too large, or when they say things like "split this commit", "commit ist zu groß", "too many things in one commit", "aufteilen", "split last commit", "commit has mixed changes", "zu viel in einem commit", or "separate the changes". Also triggers on /commit-split. Rewrites only the last commit (or last N commits) safely.
+description: Split a commit into focused topic-based commits with auto-detection. Triggers: "split commit", "aufteilen", "commit zu groß", "too many things in one commit", "separate the changes", /commit-split.
 ---
 
 # Commit Split
 
 Split an oversized or mixed-concern commit into multiple focused commits. One commit, one topic — so history stays readable and reviewable. This only works safely on the most recent commit(s); see the constraint section below for commits further back.
 
-Read `references/git-safety.md` before your first action — especially the section on history rewriting.
+## Safety (always apply)
+- Always confirm the split plan before any `git reset`
+- Always warn before force push — show exact command and implications
+- Never `--amend` — create new commits
+- Verify with `git diff --cached --stat` after staging each group
+- Check for detached HEAD and missing remote before starting
 
 ## Workflow
 
@@ -56,28 +61,7 @@ Apply topic detection from `references/topic-detection.md`:
 
 For each file in the commit, assign it to a topic. Mark files that contain changes from multiple topics with ⚡.
 
-Produce a split plan:
-
-```
-Commit: feat(amazon): add dashboard and fix auth redirect
-
-This commit contains 3 topics:
-
-[1] Amazon Dashboard (4 files)
-    A  src/amazon/dashboard.tsx
-    A  src/amazon/charts.tsx
-    M  src/routes.tsx (routes for /amazon)
-    M  src/utils/url.ts ⚡ (shared — contains changes for both topic 1 and 2)
-
-[2] Auth Bugfix (2 files)
-    M  src/auth/login.tsx
-    M  src/utils/url.ts ⚡ (shared — see above)
-
-[3] Dependency Updates (1 file)
-    M  package.json
-
-⚡ = file contains changes from multiple topics — will be split at hunk level
-```
+Produce a split plan: numbered topic groups with file lists and ⚡ markers for mixed files. Same format as smart-commit's topic overview.
 
 ### Step 3: Confirm the Split Plan
 
@@ -119,16 +103,15 @@ Tell the user: "The commit has been undone. All changes are staged and ready to 
 
 ### Step 6: Commit Each Topic Group
 
-For each topic group in order:
+First, unstage everything ONCE (not per iteration):
 
-**1. Unstage everything:**
 ```bash
 git reset HEAD
 ```
 
-All changes are now unstaged in the working tree.
+All changes are now unstaged in the working tree. Then, for each topic group in order:
 
-**2. Stage only this topic's files:**
+**1. Stage only this topic's files:**
 
 For single-topic files:
 ```bash
@@ -174,6 +157,15 @@ Split complete. Original commit replaced by 3 commits:
 a1b2c3d feat(amazon): add analytics dashboard with KPI grid and charts
 d4e5f6g fix(auth): redirect to intended URL after login
 e7f8g9h chore(deps): update react-charts to 2.1.0
+```
+
+### Step 7.5: Next Steps
+
+```
+Split complete. What's next?
+[r] Run /diff-review on the new commits
+[p] Run /safe-push to push
+[d] Done
 ```
 
 ### Step 8: Force Push (If Already Pushed)

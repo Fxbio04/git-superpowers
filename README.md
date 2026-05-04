@@ -8,7 +8,7 @@
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License: MIT" />
   </a>
-  <img src="https://img.shields.io/badge/Skills-15-orange?style=for-the-badge" alt="15 Skills" />
+  <img src="https://img.shields.io/badge/Skills-16-orange?style=for-the-badge" alt="16 Skills" />
   <img src="https://img.shields.io/badge/Claude_Code-Plugin-blueviolet?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude Code Plugin" />
   <img src="https://img.shields.io/badge/Dependencies-0-brightgreen?style=for-the-badge" alt="Zero Dependencies" />
 </p>
@@ -91,6 +91,12 @@
 | `/git-superpowers:git-undo` | Recovery wenn was schiefgeht. Falscher Branch, versehentlich gepusht, Commit rückgängig machen — zeigt immer die sicherste Option zuerst. |
 | `/git-superpowers:pr-prep` | Bereitet einen sauberen Pull Request vor. Prüft Status, führt Audit durch, generiert PR-Beschreibung aus Commits, erstellt PR via `gh`. |
 
+### Workflow-Automatisierung
+
+| Skill | Beschreibung |
+|---|---|
+| `/git-superpowers:daily-workflow` | Geführter Workflow der Skills verkettet — Sync → Commit → Review → Push → PR in einem Flow. Erkennt den Status der Branch und schlägt die passende Pipeline vor. Quick-Mode für erfahrene User. |
+
 ---
 
 ## Installation
@@ -107,7 +113,7 @@
 claude plugin marketplace add Fxbio04/git-superpowers && claude plugin install git-superpowers@git-superpowers
 ```
 
-Fertig — alle 15 Skills sind sofort verfügbar.
+Fertig — alle 16 Skills sind sofort verfügbar.
 
 ### Update
 
@@ -166,7 +172,8 @@ git-superpowers/
 │   ├── hotfix/                # Notfall-Workflow
 │   ├── git-history/           # File/Function History
 │   ├── git-undo/              # Recovery bei Fehlern
-│   └── pr-prep/               # PR vorbereiten
+│   ├── pr-prep/               # PR vorbereiten
+│   └── daily-workflow/        # Geführte Skill-Pipeline
 ├── references/
 │   ├── topic-detection.md     # KI-Topic-Erkennung
 │   ├── hunk-analysis.md       # Hunk-Level Splitting

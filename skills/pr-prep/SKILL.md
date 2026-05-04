@@ -1,13 +1,17 @@
 ---
 name: pr-prep
-description: Prepare a clean, well-described pull request — audit the branch, generate a PR description from commits and diffs, and create the PR via GitHub CLI. Use when the user wants to open a PR, is ready to merge, or says things like "prepare PR", "PR erstellen", "ready for merge", "PR vorbereiten", "make PR to main", "pull request", "ich will mergen", "branch fertig", "PR aufmachen", or "submit for review". Also triggers on /pr-prep.
+description: Audit branch, generate PR description from commits, create PR via gh CLI. Triggers: "PR erstellen", "pull request", "ready for merge", "branch fertig", "PR aufmachen", /pr-prep.
 ---
 
 # PR Prep
 
 Turn your branch into a clean, reviewable pull request. This skill audits for issues, checks for conflicts with main, generates a clear description, and creates the PR — so reviewers get context without asking.
 
-Read `references/git-safety.md` before your first action.
+## Safety (always apply)
+- Never create a PR with conflict markers in the diff
+- Always scan for secrets before creating PR (see `references/git-safety.md` for patterns)
+- Always run conflict dry-run — reviewers will notice conflicts
+- PR description must have a Test Plan section
 
 ## Workflow
 

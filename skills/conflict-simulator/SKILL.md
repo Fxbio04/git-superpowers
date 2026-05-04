@@ -1,13 +1,16 @@
 ---
 name: conflict-simulator
-description: Predict merge or rebase conflicts BEFORE they happen, without modifying your branch or working tree. Use when the user wants to check if a sync will go smoothly, or says things like "will there be conflicts", "check for conflicts", "simulate rebase", "gibt es konflikte", "test ob rebase klappt", "conflict check", "dry run rebase", "wird das klappen", "check before merge", "was passiert wenn ich rebase", or "preview conflicts". Also triggers on /conflict-simulator. Also called proactively by safe-push and smart-sync before risky operations.
+description: Predict rebase/merge conflicts without touching your branch (read-only simulation). Triggers: "gibt es konflikte", "will there be conflicts", "dry run rebase", "wird das klappen", /conflict-simulator.
 ---
 
 # Conflict Simulator
 
 Predict merge and rebase conflicts before they happen — without touching your branch. This skill is read-only: it simulates, reports, and leaves everything exactly as it found it.
 
-Read `references/git-safety.md` and `references/conflict-resolution.md` before your first action.
+## Safety (always apply)
+- This skill MUST NOT modify the working tree, index, or any branch
+- Always verify `git status` and `git branch --show-current` match initial state before reporting
+- If cleanup fails, stop immediately and report exact state to the user
 
 ## Workflow
 
@@ -87,11 +90,20 @@ git merge-tree --write-tree HEAD origin/main 2>&1; echo "EXIT:$?"
 
 **Important: Check the EXIT STATUS, not the output content.**
 - Exit code `0` = clean merge, no conflicts. The output is a tree SHA.
-- Exit code `1` = conflicts detected. The output includes a tree SHA followed by a "Conflicted file info" section listing the conflicted files.
+- Exit code `1` = conflicts detected. The output includes CONFLICT lines.
 
-Parse the "Conflicted file info" section from the output to extract the list of conflicted files. Do NOT try to parse the tree SHA or look for conflict markers in the merge-tree output — always rely on the exit status to determine if conflicts exist.
+Extract conflicted files with a concrete grep — never try to parse the tree SHA or infer from output structure:
 
-An empty conflicted file list does NOT necessarily mean a clean merge — always check the exit status first.
+```bash
+MERGE_OUTPUT=$(git merge-tree --write-tree HEAD origin/main 2>&1)
+MERGE_EXIT=$?
+if [ "$MERGE_EXIT" -ne 0 ]; then
+  # Extract conflicted file paths from CONFLICT lines
+  echo "$MERGE_OUTPUT" | grep '^CONFLICT' | sed 's/.*Merge conflict in //' | sed 's/CONFLICT .*//'
+fi
+```
+
+Always rely on the exit status to determine if conflicts exist — an empty grep result with exit code 1 still means conflicts.
 
 **For older git versions** (before 2.38) that do not support `--write-tree`, fall back to the detached HEAD approach:
 
@@ -133,59 +145,18 @@ These must match the values recorded in Step 1. If they don't, stop and report t
 
 ### Step 7: Report Results
 
-**No conflicts:**
-```
-Conflict Simulation: fb → origin/main
-
-No conflicts predicted. ✓
-
-5 files changed on both sides — no overlapping sections.
-Safe to run /smart-sync when ready.
-```
+**No conflicts:** Report clean simulation, suggest `/smart-sync` when ready.
 
 **Conflicts found:**
 
-For each conflicted file, read the conflict output to understand what each side changed. Use `references/topic-detection.md` to group conflicts by topic.
+For each conflicted file, read the conflict output to understand what each side changed. Group by topic if possible.
 
 Assess severity per file:
-- **Easy** — same file, entirely different sections (git just needs to be told to take both)
-- **Medium** — same section of a file modified on both sides in compatible ways
-- **Hard** — fundamental restructuring on one side that invalidates the other side's changes
+- **Easy** — different sections of same file, near-automatic merge
+- **Medium** — same section modified in compatible ways, needs ordering
+- **Hard** — structural changes that invalidate the other side's approach
 
-```
-Conflict Simulation: fb → origin/main
-
-Predicted conflicts: 4 files
-
-[Easy]   package.json
-         Your side:  added "react-charts": "^2.1.0" in dependencies
-         Main's side: added "lodash": "^4.17.21" in dependencies
-         → Both added different dependencies — combine them, no semantic conflict
-
-[Medium] src/routes.tsx
-         Your side:  added /amazon route at the bottom of the routes array
-         Main's side: added /reports route in the same location
-         → Both added routes to the same section — both changes are valid, order them
-
-[Hard]   src/utils/api.ts
-         Your side:  added 3 new imports and a helper function using the old module structure
-         Main's side: restructured the entire module — new export pattern, removed old exports
-         → Your additions reference exports that no longer exist in main's version
-         → Requires manual adaptation of your changes to the new structure
-
-[Medium] src/config.ts
-         Your side:  added AMAZON_REGION config key
-         Main's side: moved config to a new Config class with typed keys
-         → Your key needs to be added to the new class format
-
-Severity summary:
-  1 Hard conflict   — api.ts will need careful manual resolution
-  2 Medium conflicts — straightforward to resolve
-  1 Easy conflict   — near-automatic
-
-Recommendation: The api.ts conflict will get harder the longer you wait —
-main's refactor is actively diverging from your structure. Sync soon.
-```
+For each conflict show: severity tag, file path, what your side changed, what main changed, one-line recommendation. End with a severity summary and a timing recommendation (e.g., "The hard conflict will get worse over time — sync soon").
 
 ### Step 8: Offer Next Steps
 

@@ -1,13 +1,18 @@
 ---
 name: git-undo
-description: Recover from git mistakes safely — undo commits, revert pushes, restore deleted files, fix wrong-branch pushes, and escape bad rebases. Use when something went wrong with git, or the user says things like "undo last commit", "I pushed to wrong branch", "revert", "mach das rückgängig", "falscher branch", "commit zurücknehmen", "accidentally deleted", "restore file", "revert my push", "alles rückgängig machen", "wo ist meine Datei", or "ich habe alles kaputt gemacht". Also triggers on /git-undo.
+description: Safe git recovery — undo commits, revert pushes, restore files, escape bad rebases. Triggers: undo, revert, "mach rückgängig", "falscher branch", "alles kaputt gemacht", "restore file", /git-undo.
 ---
 
 # Git Undo
 
 Diagnose what went wrong and recover safely. This skill always shows you exactly what will happen before doing anything destructive — and always suggests the least destructive option first.
 
-Read `references/git-safety.md` before your first action. The safety rules there are mandatory for every operation below.
+## Safety (always apply)
+- Always show what will happen before executing any recovery
+- Always confirm destructive operations with explicit user approval
+- For pushed commits: prefer `git revert` over history rewriting
+- For unpushed commits: prefer `git reset --soft` over `--hard`
+- `git reflog` is always the ultimate escape hatch
 
 ## Workflow
 
@@ -49,7 +54,7 @@ Then ask for confirmation. Never skip this for destructive operations.
 
 ### Scenario 1: Undo Last Commit, Keep Changes
 
-The safest undo — moves HEAD back one commit but keeps all file changes in your working directory.
+The safest undo — moves HEAD (your current position in git history) back one commit but keeps all file changes in your working directory.
 
 ```bash
 git log --oneline -3    # Show what will be undone
@@ -93,7 +98,7 @@ git reset --hard HEAD~1
 
 ### Scenario 3: Revert a Pushed Commit
 
-When others may already have pulled the commit, `git revert` is the safe path — it creates a new commit that undoes the changes without rewriting history.
+When others may already have pulled the commit, `git revert` is the safe path — it creates a new commit that undoes the changes. This is safer than deleting the commit because it doesn't rewrite history that others already have.
 
 ```bash
 git log --oneline -10   # Help user identify the commit
@@ -195,7 +200,7 @@ After restoring, the file is staged. Ask: "Stage and commit the restored file? (
 
 ### Scenario 6: Bad Rebase — Go Back to Pre-Rebase State
 
-`git reflog` is the escape hatch — it records every HEAD movement, including before the rebase.
+`git reflog` is the escape hatch — it records every position your branch has been in, like an undo history for git itself.
 
 ```bash
 git reflog | head -20

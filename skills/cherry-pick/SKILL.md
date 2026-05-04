@@ -1,13 +1,17 @@
 ---
 name: cherry-pick
-description: Selectively pick specific commits from other branches and apply them to the current branch. Use when the user wants to grab a fix or feature from another branch without merging everything, or says things like "grab that bugfix from bb", "cherry-pick", "nimm den commit von bobby", "hol den fix aus der anderen branch", "take commit from", "ich brauche nur diesen einen fix", "den commit hier rüber holen", or "bring that change to my branch". Also triggers on /cherry-pick.
+description: Pick specific commits from other branches with duplicate detection and conflict handling. Triggers: cherry-pick, "hol den fix von", "nimm den commit von", "grab that bugfix from", /cherry-pick.
 ---
 
 # Cherry-Pick
 
 Apply specific commits from another branch to your current branch — without bringing everything else along. This is the right move when a branch has one useful fix but isn't ready to merge.
 
-Read `references/git-safety.md` before your first action.
+## Safety (always apply)
+- Always show `git show --stat` before applying — no silent picks
+- Always offer `--abort` while a pick is in progress
+- Pick in chronological order (oldest first) to respect dependencies
+- Check for detached HEAD and missing remote before starting
 
 ## Workflow
 

@@ -1,13 +1,16 @@
 ---
 name: branch-inspect
-description: Inspect what other branches are doing and predict merge conflicts before they happen. Use when the user wants to see what others have been working on, check other branches, compare branches, find potential conflicts, understand branch differences, or says things like "what has Bobby been doing", "show me the other branches", "was machen die anderen", "welche branches gibt es", "gibt es conflicts", "compare branches", or "wer hat was gemacht". Also triggers on /branch-inspect.
+description: Inspect other branches — who committed what, file overlaps, predicted conflicts. Triggers: "was machen die anderen", "welche branches gibt es", "compare branches", "wer hat was gemacht", /branch-inspect.
 ---
 
 # Branch Inspect
 
 See what's happening on other branches — who committed what, what changed, and where your branch might conflict with theirs. Predicts conflicts before they happen so you can prepare.
 
-Read `references/git-safety.md` and `references/branch-history.md` before your first action.
+## Safety (always apply)
+- Always `git fetch origin` before reading branch data — stale refs give wrong results
+- Never run `git log` without a range or limit
+- Check for detached HEAD and missing remote before starting
 
 ## Workflow
 
@@ -20,18 +23,7 @@ git branch -r --sort=-committerdate --format='%(refname:short) %(committerdate:r
 
 Run `git fetch origin --quiet` at the start. If inspecting multiple repos, fetch all in parallel before displaying results.
 
-Filter out `origin/HEAD` and present:
-
-```
-Active Branches:
-
-[1] origin/bb    — 2 hours ago (Bobby)
-[2] origin/fb    — 1 day ago (you)
-[3] origin/it    — 3 days ago (IT)
-[4] origin/main  — 5 hours ago (last merge)
-```
-
-Highlight the user's current branch. Hide branches with no activity in the last 90 days unless the user asks for all.
+Filter out `origin/HEAD`. Present as numbered list: `[N] branch — time ago (author)`. Highlight the user's current branch. Hide branches with no activity in the last 90 days unless asked.
 
 Ask: **"Which branch do you want to inspect? (number, name, or 'compare' for overlap analysis)"**
 
@@ -45,23 +37,7 @@ git log --oneline origin/main..origin/<branch> | head -20
 git shortlog -sn origin/main..origin/<branch>
 ```
 
-```
-origin/bb — 8 commits ahead of main
-
-  Bobby (8 commits):
-  a1b2c3d feat(tickets): new ticket dashboard
-  d4e5f6g feat(tickets): ticket filter component
-  e7f8g9h fix(warehouse): stock count correction
-  ...
-```
-
-**Files changed:**
-```bash
-git diff --stat origin/main..origin/<branch>
-```
-
-**Summary:** Read the commit messages and provide a human-readable summary:
-"Bobby is building a new ticket dashboard (6 commits) and fixed a stock counting bug in the warehouse module (2 commits)."
+Show commit count per author, commit list (`--oneline`), and `--stat` for files changed. Then write a human-readable one-sentence summary of what the branch is doing based on commit messages.
 
 ### Step 3: Compare With Your Branch
 
@@ -74,30 +50,7 @@ comm -12 \
   <(git diff --name-only origin/main..origin/<branch> | sort)
 ```
 
-If there are overlapping files:
-
-```
-Overlap between fb and bb:
-
-⚠️ 3 files changed in both branches:
-
-  src/utils/api.ts
-    You: added Amazon API imports (lines 12-15, 45-50)
-    bb:  added Ticket API endpoint (lines 30-35)
-    Risk: LOW — changes are in different parts of the file
-
-  src/routes.tsx
-    You: added /amazon route
-    bb:  added /tickets route
-    Risk: MEDIUM — both adding routes, might conflict depending on structure
-
-  package.json
-    You: added react-charts dependency
-    bb:  added ticket-ui dependency
-    Risk: LOW — different dependencies, auto-mergeable
-```
-
-For each overlapping file, read both sides' diffs to assess conflict risk:
+If there are overlapping files, show each with: what your side changed, what their side changed, and a risk rating. For each overlapping file, read both sides' diffs to assess conflict risk:
 - **LOW**: Changes in different parts of the file, will auto-merge
 - **MEDIUM**: Changes near each other, might conflict
 - **HIGH**: Changes on the same lines, will definitely conflict
@@ -122,20 +75,15 @@ Based on the analysis, suggest actions:
 
 ### Step 5: Multi-Branch Comparison (Optional)
 
-If the user says "compare" or asks about all branches:
+If the user says "compare" or asks about all branches, show a cross-branch overlap matrix: NxN table of branch pairs with overlap count and ⚠️/✓ indicators.
 
-```
-Cross-Branch Overlap Matrix:
+## Next Steps
 
-         fb    bb    it
-fb        —    3 ⚠️   0 ✓
-bb       3 ⚠️   —    1 ⚠️
-it       0 ✓   1 ⚠️   —
+After the inspection, offer relevant follow-ups based on findings:
 
-⚠️ fb and bb share 3 modified files
-⚠️ bb and it share 1 modified file
-✓ fb and it have no overlap
-```
+- If conflicts predicted: "Run `/conflict-simulator` for detailed severity analysis, or `/smart-sync` to resolve now."
+- If the user wants specific files from another branch: "Run `/selective-merge` or `/cherry-pick` to bring changes over."
+- If own branch is behind: "Run `/smart-sync` to catch up with main."
 
 ## Token Efficiency
 

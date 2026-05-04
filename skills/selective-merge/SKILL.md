@@ -1,13 +1,17 @@
 ---
 name: selective-merge
-description: Bring specific files (not whole commits) from another branch into your working tree. Use when the user wants a single file or a few files from another branch, not a full merge, or says things like "get the api.ts from bobby's branch", "hol mir die datei von bb", "take file from another branch", "ich brauch die version von main", "copy file from branch", "hol mir die datei", "ich will die version aus feature-x", "get that file from the other branch". Also triggers on /selective-merge.
+description: Take specific files from another branch (not whole commits) with merge-parts option. Triggers: "hol mir die datei von", "get file from branch", "ich brauch die version von", "take file from", /selective-merge.
 ---
 
 # Selective Merge
 
 Take specific files from another branch without merging the whole branch. This brings the file's current state — not a commit — into your working tree. You decide what to commit afterward.
 
-Read `references/git-safety.md` before your first action.
+## Safety (always apply)
+- Never overwrite uncommitted local changes without explicit confirmation
+- Always show diff between branches before applying anything
+- Never commit the result — leave that to the user or smart-commit
+- Check for detached HEAD and missing remote before starting
 
 ## Workflow
 
@@ -30,7 +34,21 @@ git branch -a | grep <branch-name>        # find the branch
 
 ### Step 2: Show What Is Different
 
-Before touching anything, show what would change:
+First, check if the file exists in both branches:
+
+```bash
+# Does the file exist on the source branch?
+git cat-file -e origin/<branch>:<file> 2>/dev/null || echo "FILE_NOT_ON_SOURCE"
+
+# Does the file exist on the current branch?
+git ls-files --error-unmatch <file> 2>/dev/null || echo "FILE_NOT_LOCAL"
+```
+
+If the file doesn't exist on the source branch: "This file doesn't exist on origin/`<branch>`. Nothing to take." Stop.
+
+If the file exists on the source but not locally, inform the user: "This file doesn't exist on your branch yet — it will be added as a new file."
+
+Then show what would change:
 
 ```bash
 git diff HEAD..origin/<branch> -- <file>

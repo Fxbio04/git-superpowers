@@ -9,93 +9,101 @@
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License: MIT" />
   </a>
   <img src="https://img.shields.io/badge/Skills-16-orange?style=for-the-badge" alt="16 Skills" />
+  <img src="https://img.shields.io/badge/Agents-4-blue?style=for-the-badge" alt="4 Agents" />
   <img src="https://img.shields.io/badge/Claude_Code-Plugin-blueviolet?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude Code Plugin" />
   <img src="https://img.shields.io/badge/Dependencies-0-brightgreen?style=for-the-badge" alt="Zero Dependencies" />
 </p>
 
 <p align="center">
-  Claude Code Skills für intelligente Git-Workflows.<br>
-  Topic-basierte Commits, smartes Rebasing, Multi-Repo Überblick, Pre-Push Auditing, Conflict-Vorhersage und mehr — alles KI-gestützt.
+  AI-powered Git workflows for Claude Code.<br>
+  Topic-based commits, smart rebasing, multi-repo overview, pre-push auditing, conflict prediction — and more.
 </p>
 
 ---
 
-## Inhalt
+## Quick Start
 
-- [Das Problem](#das-problem)
-- [Skills](#skills)
-  - [Kern-Workflows](#kern-workflows)
-  - [Überblick & Analyse](#überblick--analyse)
-  - [Code-Qualität](#code-qualität)
-  - [Branch-Operationen](#branch-operationen)
-  - [History & Recovery](#history--recovery)
-- [Installation](#installation)
-- [Optionale Konfiguration](#optionale-konfiguration)
-- [Architektur](#architektur)
-- [Sicherheit](#sicherheit)
-- [Author](#author)
-- [Lizenz](#lizenz)
+```
+/plugin marketplace add Fxbio04/git-superpowers && /plugin install git-superpowers@git-superpowers
+```
+
+Then just talk to Claude:
+
+```
+"commit nur den bugfix, nicht das feature"     → smart-commit
+"sync my branch"                               → smart-sync
+"pushen"                                       → safe-push
+"wo steh ich überall"                          → repo-overview
+"wird es conflicts geben?"                     → conflict-simulator
+"alles auf einmal — commit, push, PR"          → daily-workflow
+```
 
 ---
 
-## Das Problem
+## The Problem
 
-- **Vermischte Änderungen** — mehrere Features und Bugfixes in derselben Branch, teilweise in denselben Dateien
-- **Merge-Conflict-Chaos** — beim Rebase von main entstehen Conflicts in Dateien die Änderungen aus verschiedenen Topics enthalten
-- **Unfertiges wird mitgepusht** — halbfertige Features landen versehentlich im Commit
-- **Kein Überblick** — schwer zu sehen wo alle Repos stehen und was andere Branches machen
-- **Vermeidbare Fehler** — Debug-Statements, vergessene Conflict-Marker, Secrets im Diff
-- **Schwer nachvollziehbar** — wer hat was wann geändert und warum
+| Problem | What happens | git-superpowers fix |
+|---------|-------------|---------------------|
+| Mixed changes | Multiple features in one branch, same files | Topic detection + hunk-level splitting |
+| Merge conflict chaos | Conflicts in files with changes from different topics | Topic-aware conflict resolution |
+| Unfinished code pushed | Debug statements, forgotten TODOs, missing files | Pre-push audit with auto-fix |
+| No overview | Hard to see where all repos stand | Multi-repo dashboard |
+| Avoidable mistakes | Secrets in diff, conflict markers, force push | Proactive detection + blocking |
+| Hard to trace | Who changed what, when, and why | Narrative git history |
 
 ---
 
 ## Skills
 
-### Kern-Workflows
+### Core Workflows
 
-| Skill | Beschreibung |
+| Skill | What it does |
 |---|---|
-| `/git-superpowers:smart-commit` | Gruppiert Änderungen nach Topics per KI-Analyse. Wenn eine Datei Änderungen aus verschiedenen Topics enthält (Bugfix UND Feature), wird auf Hunk-Ebene gesplittet — jeder Commit ist sauber und fokussiert. |
-| `/git-superpowers:smart-sync` | Rebased deine Branch auf main mit Topic-basierter Conflict-Resolution. Statt roher Conflict-Diffs siehst du welches Topic jeder Conflict betrifft und wirst durch die Lösung geführt. |
-| `/git-superpowers:safe-push` | Pre-Push Audit mit automatischen Fixes. Scannt ausgehende Commits auf Debug-Statements, Conflict-Marker, Secrets, unvollständige Features und große Dateien. Sagt Conflicts vorher und fixt Probleme direkt — nicht nur Warnungen. |
+| `smart-commit` | Groups changes by topic. Splits mixed files at hunk level — one commit per topic. Offers separate, combined, or quick mode. |
+| `smart-sync` | Rebases onto main with topic-aware conflict resolution. Detects merge commits, guides through conflicts, suggests abort when overwhelmed. |
+| `safe-push` | Scans outgoing commits for debug statements, secrets, conflict markers, incomplete features. Predicts conflicts with main. Fixes issues directly. |
+| `daily-workflow` | Chains skills into a pipeline: commit → review → sync → push → PR. Detects branch state and suggests the right flow. Quick mode for experienced users. |
 
-### Überblick & Analyse
+### Overview & Analysis
 
-| Skill | Beschreibung |
+| Skill | What it does |
 |---|---|
-| `/git-superpowers:repo-overview` | Multi-Repo Dashboard: zeigt alle Repos mit Branch-Status, Behind/Ahead, uncommitted Changes und letztem Commit. Bietet direkte Aktionen an. |
-| `/git-superpowers:branch-inspect` | Zeigt was auf anderen Branches passiert — wer hat was committed, welche Dateien überschneiden sich, wo wird es Conflicts geben. |
-| `/git-superpowers:cross-compare` | Vergleicht wie ein bestimmtes Modul/eine Datei über mehrere Branches hinweg aussieht. Zeigt Unterschiede und potenzielle Kollisionen. |
-| `/git-superpowers:conflict-simulator` | Sagt Merge-Conflicts vorher BEVOR sie passieren — ohne den Rebase tatsächlich auszuführen. Zeigt Schweregrad und empfiehlt wann man syncen sollte. |
+| `repo-overview` | Dashboard across all repos: branch, behind/ahead, uncommitted changes. Finds repos via Spotlight/locate. Offers actions per repo. |
+| `branch-inspect` | Shows what other branches are doing. Who committed what, file overlaps, predicted conflicts. Cross-branch overlap matrix. |
+| `cross-compare` | Compares a file or module across branches side-by-side. Collision forecast for each pair. |
+| `conflict-simulator` | Predicts conflicts without touching your branch (read-only). Uses `git merge-tree` for accurate simulation. Severity ratings per file. |
 
-### Code-Qualität
+### Code Quality
 
-| Skill | Beschreibung |
+| Skill | What it does |
 |---|---|
-| `/git-superpowers:diff-review` | KI-Code-Review deiner Änderungen vor dem Commit. Findet Bugs, Logic-Fehler, Security-Issues und fehlende Edge Cases — kein Linter, sondern ein Senior Dev Review. |
-| `/git-superpowers:commit-split` | Teilt einen bestehenden Commit nachträglich in mehrere fokussierte Commits auf. Erkennt Topics automatisch und führt durch den Split. |
+| `diff-review` | Senior-dev code review: bugs, security, async mistakes, missing error handling. Not a linter — semantic understanding. Fixes issues directly. |
+| `commit-split` | Splits an oversized commit into focused topic commits. Auto-detects topics, handles hunk-level splitting for mixed files. |
 
-### Branch-Operationen
+### Branch Operations
 
-| Skill | Beschreibung |
+| Skill | What it does |
 |---|---|
-| `/git-superpowers:cherry-pick` | Holt gezielt einzelne Commits aus anderen Branches. Zeigt vorher was kommt, prüft auf Duplikate und Conflicts. |
-| `/git-superpowers:selective-merge` | Bringt einzelne Dateien (nicht ganze Commits) aus einer anderen Branch. Wahlweise komplett ersetzen oder nur bestimmte Änderungen übernehmen. |
-| `/git-superpowers:hotfix` | Notfall-Workflow für Produktions-Bugs. Stashed aktuelle Arbeit, erstellt Hotfix-Branch von main, führt durch Fix + Audit + PR, und kehrt zur vorherigen Branch zurück. |
+| `cherry-pick` | Picks specific commits from other branches. Shows preview, checks for duplicates, handles conflicts. |
+| `selective-merge` | Takes specific files (not commits) from another branch. Replace completely or merge specific parts. |
+| `hotfix` | Emergency workflow: stash → branch from main → fix → audit → push → PR → return to previous branch. |
 
 ### History & Recovery
 
-| Skill | Beschreibung |
+| Skill | What it does |
 |---|---|
-| `/git-superpowers:git-history` | Deep Dive in die Geschichte einer Datei oder Funktion. Wer hat was wann geändert und warum — als lesbare Zusammenfassung, nicht als rohe Git-Ausgabe. |
-| `/git-superpowers:git-undo` | Recovery wenn was schiefgeht. Falscher Branch, versehentlich gepusht, Commit rückgängig machen — zeigt immer die sicherste Option zuerst. |
-| `/git-superpowers:pr-prep` | Bereitet einen sauberen Pull Request vor. Prüft Status, führt Audit durch, generiert PR-Beschreibung aus Commits, erstellt PR via `gh`. |
+| `git-history` | File/function/line history as a readable narrative. Who changed what, when, why — not raw git output. |
+| `git-undo` | Safe recovery: undo commits, revert pushes, restore files, escape bad rebases. Always shows the safest option first. |
+| `pr-prep` | Audits branch, runs conflict dry-run, generates PR description from commits, creates PR via `gh`. |
 
-### Workflow-Automatisierung
+### Agents (spawned by skills for complex tasks)
 
-| Skill | Beschreibung |
-|---|---|
-| `/git-superpowers:daily-workflow` | Geführter Workflow der Skills verkettet — Sync → Commit → Review → Push → PR in einem Flow. Erkennt den Status der Branch und schlägt die passende Pipeline vor. Quick-Mode für erfahrene User. |
+| Agent | Used by | Task |
+|---|---|---|
+| `topic-analyzer` | smart-commit, commit-split | Groups changes by topic via diff analysis |
+| `conflict-resolver` | smart-sync | Analyzes conflicts, produces resolution plan with severity ratings |
+| `code-reviewer` | diff-review | Semantic code review, returns structured JSON findings |
+| `repo-scanner` | repo-overview | Parallel multi-repo status scan in minimal bash calls |
 
 ---
 
@@ -113,91 +121,77 @@
 claude plugin marketplace add Fxbio04/git-superpowers && claude plugin install git-superpowers@git-superpowers
 ```
 
-Fertig — alle 16 Skills sind sofort verfügbar.
-
 ### Update
 
 ```
-/plugin marketplace update git-superpowers
-/plugin update git-superpowers@git-superpowers
-```
-
-Oder via CLI:
-
-```bash
-claude plugin marketplace update git-superpowers
-claude plugin update git-superpowers@git-superpowers
+/plugin marketplace update git-superpowers && /plugin update git-superpowers@git-superpowers
 ```
 
 ---
 
-## Optionale Konfiguration
+## Design Principles
 
-Funktioniert ohne jede Config in jedem Git-Repo.
+### Token Efficiency
 
-Wer will, kann eine `.claude-git.yml` im Repo-Root anlegen für custom Topic-Mappings:
+- `--stat` and `--name-only` first — full diffs only when semantic analysis is needed
+- Safety rules inline in each skill — no redundant reference reads
+- Agents spawn only for complex tasks (>10 files, >500 line diffs, >5 repos)
+- Example outputs described, not shown — Claude knows how to format
+
+### Adaptive Output
+
+Skills adjust to your experience level:
+- **Beginners**: Explanations, recommended defaults, guided flow
+- **Experienced**: Terse output, skip menus, quick mode
+- **Default**: Brief explanations, `[Enter]` for safe choice
+
+### Safety
+
+- Never `git add .` — always specific files
+- Never `--force` — always `--force-with-lease`
+- Always show what will happen before it happens
+- Always confirm before destructive operations
+- Secret scanning before every push (non-negotiable)
+- Fix problems directly — not just warnings
+- Worktree, detached HEAD, shallow clone detection
+
+---
+
+## Optional Configuration
+
+Works without any config in any git repo.
+
+Optional `.claude-git.yml` in repo root for custom topic mappings:
 
 ```yaml
-# Optional: Verzeichnisse für repo-overview
 scan_dirs:
   - ~/source/
   - ~/projects/
 
-# Optional: Explizite Topic-Zuordnungen für smart-commit
 topics:
-  amazon:
-    paths: ["src/amazon/", "departments/amazon"]
-  shopify:
-    paths: ["src/shopify/", "departments/shopifySync"]
+  payments:
+    paths: ["src/payments/", "lib/stripe/"]
+  auth:
+    paths: ["src/auth/", "middleware/auth"]
 ```
 
 ---
 
-## Architektur
+## Architecture
 
 ```
 git-superpowers/
-├── skills/
-│   ├── smart-commit/          # Topic-basiert committen
-│   ├── smart-sync/            # Intelligenter Rebase
-│   ├── safe-push/             # Pre-Push Audit + Conflict-Prediction
-│   ├── repo-overview/         # Multi-Repo Dashboard
-│   ├── branch-inspect/        # Branch-Analyse
-│   ├── cross-compare/         # Cross-Branch Vergleich
-│   ├── conflict-simulator/    # Conflict-Vorhersage
-│   ├── diff-review/           # KI-Code-Review
-│   ├── commit-split/          # Commits aufteilen
-│   ├── cherry-pick/           # Commits aus anderen Branches
-│   ├── selective-merge/       # Dateien aus anderen Branches
-│   ├── hotfix/                # Notfall-Workflow
-│   ├── git-history/           # File/Function History
-│   ├── git-undo/              # Recovery bei Fehlern
-│   ├── pr-prep/               # PR vorbereiten
-│   └── daily-workflow/        # Geführte Skill-Pipeline
-├── references/
-│   ├── topic-detection.md     # KI-Topic-Erkennung
-│   ├── hunk-analysis.md       # Hunk-Level Splitting
-│   ├── conflict-resolution.md # Conflict-Strategien
-│   ├── git-safety.md          # Shared Safety-Regeln
-│   └── branch-history.md      # Git-History Commands
-└── docs/specs/                # Design-Dokumentation
+├── skills/              # 16 Skills (SKILL.md each)
+├── agents/              # 4 Subagents (spawned by skills)
+└── references/          # 5 Shared references
+    ├── git-safety.md        # Safety rules + adaptive output
+    ├── topic-detection.md   # Progressive topic grouping
+    ├── hunk-analysis.md     # Hunk-level selective staging
+    ├── conflict-resolution.md  # Topic-aware conflict strategy
+    └── branch-history.md    # Efficient git history commands
 ```
 
-**Pure Skills, keine Dependencies.** Alles läuft über Claudes natürliche Fähigkeiten — Diffs lesen, Code verstehen, Git-Commands ausführen. Keine Scripts, keine MCP-Server, kein `npm install`.
-
-**Token-effizient by Design.** Skills nutzen `git diff --stat` und `--name-only` für Überblicke, volle Diffs werden nur gelesen wenn semantische Analyse nötig ist.
-
----
-
-## Sicherheit
-
-- Nie `git add .` oder `git add -A` — immer spezifische Dateien stagen
-- Nie `--force` Push — immer `--force-with-lease`
-- Immer zeigen was passieren wird bevor es passiert
-- Immer bestätigen lassen vor destruktiven Operationen
-- Vor jedem Push auf Secrets scannen
-- Probleme direkt fixen statt nur warnen
-- Bei Unsicherheit nachfragen statt still kaputtmachen
+**Pure skills, zero dependencies.** Everything runs through Claude's native capabilities — reading diffs, understanding code, executing git commands. No scripts, no MCP servers, no `npm install`.
 
 ---
 
@@ -205,6 +199,6 @@ git-superpowers/
 
 [@Fxbio04](https://github.com/Fxbio04)
 
-## Lizenz
+## License
 
 MIT

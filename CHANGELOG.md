@@ -2,6 +2,13 @@
 
 All notable changes to git-superpowers. Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [SemVer](https://semver.org/).
 
+## [3.2.0] — 2026-07-13
+
+### Changed
+- **deploy-check: collisions are cross-REPO, not just cross-branch.** The real incident: a *new repo* hardcodes a host port that another project on the shared VM already uses — its first deploy crashes. The port inventory now covers (a) all locally cloned repos, (b) all org repos via the gh contents API (no cloning), (c) branches of the current repo, and (d) an optional authoritative `port_registry` file (`.claude-git.yml`).
+- **First-deploy gate**: a brand-new repo/deploy config with a hardcoded host port is no longer a warning — safe-push and deploy-check refuse to push/deploy until the port is explicitly verified ("checked free on the target") or the config is fixed so collisions can't happen. Fix-first is offered before verify-first.
+- Optional `deploy_host` config (SSH **alias** only, never credentials): deploy-check may run exactly two read-only commands (`ss -tlnp`, `docker ps`) on the target after per-run user confirmation — the only check git cannot answer itself.
+
 ## [3.1.0] — 2026-07-13
 
 ### Added

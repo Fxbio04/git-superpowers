@@ -60,7 +60,7 @@ Then just talk to Claude:
 | Avoidable mistakes | Secrets in diff, conflict markers, force push | Guard hook blocks them deterministically |
 | PR friction | Unpushed branches, ignored templates, duplicate PRs, red CI | Full PR lifecycle: prep → review → ci-fix → release |
 | Team damage | Force-push on shared/protected branches rewrites teammates' history | Protected-branch refusal + shared-branch detection |
-| Branch deploy crashes the VM | Hardcoded host ports / container names collide with the running stack | Cross-branch deploy-config collision matrix |
+| First deploy crashes the VM | New repo hardcodes a port another project already uses | Org-wide port inventory + first-deploy confirmation gate |
 | Hard to trace | Who changed what, when, and why | Narrative git history |
 
 ---
@@ -113,7 +113,7 @@ Then just talk to Claude:
 
 | Skill | What it does |
 |---|---|
-| `deploy-check` | Finds deploy-config foot-guns via git — hardcoded host-port collisions **across branches** (the classic shared-VM crash), fixed `container_name`, missing healthchecks for zero-downtime, `:latest` tags, first-deploy audit. Read-only, no Docker access needed; recommends the infra-grade fix (dynamic ports, proxy, `COMPOSE_PROJECT_NAME`). |
+| `deploy-check` | Finds deploy-config foot-guns before the VM does — port inventory across **all repos of the org** (via gh, no cloning) and all branches, fixed `container_name`, missing healthchecks, `:latest` tags. First deploys with hardcoded ports are **gated behind explicit confirmation**, not warned about. Recommends the infra-grade fix (dynamic ports, proxy, `COMPOSE_PROJECT_NAME`, port registry). |
 
 ### History & Recovery
 
@@ -209,6 +209,11 @@ topics:
     paths: ["src/payments/", "lib/stripe/"]
   auth:
     paths: ["src/auth/", "middleware/auth"]
+
+# deploy-check (optional)
+deploy_host: my-vm        # SSH alias only — never credentials; enables the
+                          # confirmed read-only port check (ss, docker ps)
+port_registry: ~/infra/ports.yml   # authoritative port claims per repo
 ```
 
 ---

@@ -1,6 +1,7 @@
 ---
 name: code-reviewer
 description: Semantic code review subagent — analyzes git diffs for bugs, security issues, missing error handling, and async mistakes. Returns structured JSON findings.
+tools: Bash, Read, Grep, Glob
 ---
 
 # Code Reviewer Agent
@@ -41,6 +42,8 @@ Read the full diff before writing any findings. Understand each file's role from
 ### Step 2: Review Each Changed File
 
 For each file in the diff, systematically check these categories. Only flag what you actually see — do not speculate about code outside the diff.
+
+<!-- sync:review-categories — keep this category list identical to skills/diff-review/SKILL.md -->
 
 **Logic errors and bugs**
 - Control flow that cannot work as written

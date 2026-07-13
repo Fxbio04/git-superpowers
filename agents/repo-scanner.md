@@ -1,6 +1,8 @@
 ---
 name: repo-scanner
 description: Scan multiple git repositories in parallel — fetch status, ahead/behind counts, and uncommitted changes in minimal bash calls. Returns pipe-separated output.
+tools: Bash, Read
+model: haiku
 ---
 
 # Repo Scanner Agent
@@ -41,12 +43,8 @@ for path in $REPOS; do
   branch=$(git -C "$path" branch --show-current 2>/dev/null || echo "detached")
   default=$(git -C "$path" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
   default=${default:-main}
-  if [ "$branch" != "$default" ]; then
-    behind=$(git -C "$path" rev-list --count HEAD..origin/$default 2>/dev/null || echo "?")
-    ahead=$(git -C "$path" rev-list --count origin/$default..HEAD 2>/dev/null || echo "?")
-  else
-    behind="-"; ahead="-"
-  fi
+  behind=$(git -C "$path" rev-list --count HEAD..origin/$default 2>/dev/null || echo "?")
+  ahead=$(git -C "$path" rev-list --count origin/$default..HEAD 2>/dev/null || echo "?")
   changes=$(git -C "$path" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
   last=$(git -C "$path" log --oneline -1 --format='%cr' 2>/dev/null || echo "no commits")
   remote=$(git -C "$path" remote get-url origin 2>/dev/null || echo "no remote")
@@ -62,8 +60,8 @@ Run both steps as a single bash call by chaining them together. Do not run a sep
 |---|---|
 | `name` | `basename` of the repo path |
 | `branch` | current branch name, or `detached` if in detached HEAD state |
-| `behind` | commits behind the default branch on origin; `-` if already on the default branch; `?` if count failed |
-| `ahead` | commits ahead of the default branch on origin; `-` if already on the default branch; `?` if count failed |
+| `behind` | commits behind `origin/<default>`; on the default branch itself this means unpulled commits; `?` if count failed |
+| `ahead` | commits ahead of `origin/<default>`; on the default branch itself this means unpushed commits; `?` if count failed |
 | `changes` | number of lines in `git status --porcelain` output (each line is one changed file) |
 | `last` | relative timestamp of last commit (e.g., `2 hours ago`), or `no commits` |
 | `remote` | full remote URL of `origin`, or `no remote` |
@@ -71,7 +69,7 @@ Run both steps as a single bash call by chaining them together. Do not run a sep
 ### Edge Cases
 
 - **No remote configured**: `behind` = `?`, `ahead` = `?`, `remote` = `no remote`
-- **Repo on the default branch**: `behind` = `-`, `ahead` = `-` (not meaningful to compare a branch to itself)
+- **Repo on the default branch**: behind/ahead compare to `origin/<default>` — unpulled/unpushed commits still show up
 - **Detached HEAD**: `branch` = `detached`, skip behind/ahead calculation
 - **No commits**: `last` = `no commits`
 - **Non-standard default branch**: detect via `symbolic-ref refs/remotes/origin/HEAD`; fall back to `main`, then `master`

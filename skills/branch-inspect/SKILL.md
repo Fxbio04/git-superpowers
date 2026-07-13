@@ -12,6 +12,8 @@ See what's happening on other branches — who committed what, what changed, and
 - Never run `git log` without a range or limit
 - Check for detached HEAD and missing remote before starting
 
+**Default branch:** Commands below write `origin/main` for readability — detect the actual default branch first (Branch Detection in `references/git-safety.md`) and substitute if the repo uses something else.
+
 ## Workflow
 
 ### Step 1: Show All Branches
@@ -21,7 +23,7 @@ git fetch origin --quiet
 git branch -r --sort=-committerdate --format='%(refname:short) %(committerdate:relative) %(authorname)'
 ```
 
-Run `git fetch origin --quiet` at the start. If inspecting multiple repos, fetch all in parallel before displaying results.
+Run `git fetch origin --quiet` at the start — stale refs make every comparison below wrong.
 
 Filter out `origin/HEAD`. Present as numbered list: `[N] branch — time ago (author)`. Highlight the user's current branch. Hide branches with no activity in the last 90 days unless asked.
 

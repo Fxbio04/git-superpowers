@@ -26,14 +26,26 @@ Show what is in it:
 git show --stat HEAD
 ```
 
-Also show whether this commit has already been pushed:
+**Clean worktree guard:** History rewriting on top of uncommitted work mixes unrelated changes into the split commits. Check first:
+
+```bash
+git status --porcelain
+```
+
+If anything is uncommitted or staged, stop: "You have uncommitted changes. Commit them first (/smart-commit) or stash them (`git stash push -m 'before commit-split'`) — then we split." Only continue with a clean tree.
+
+Also show whether this commit has already been pushed — but only if an upstream actually exists, otherwise an unpushed branch looks "already pushed":
 
 ```bash
 git fetch origin 2>/dev/null
-git log --oneline origin/<branch>..HEAD 2>/dev/null
+if git rev-parse --verify -q origin/<branch> >/dev/null; then
+  git log --oneline origin/<branch>..HEAD
+else
+  echo "no upstream — nothing pushed yet"
+fi
 ```
 
-If `git log` returns nothing (the commit is not ahead of origin), the commit is already pushed. Warn the user now — don't wait until the end:
+If the upstream exists and `git log` returns nothing, the commit is already pushed. Warn the user now — don't wait until the end:
 
 ```
 ⚠ This commit is already on origin/<branch>. Splitting it will rewrite
@@ -124,14 +136,14 @@ For ⚡ mixed files, use the hunk-level approach from `references/hunk-analysis.
 3. `git add <file>`
 4. Restore the file to its full content
 
-**3. Verify staging:**
+**2. Verify staging:**
 ```bash
 git diff --cached --stat
 ```
 
 Show this to the user and confirm it contains only the expected changes for this topic.
 
-**4. Commit:**
+**3. Commit:**
 ```bash
 git commit -m "$(cat <<'EOF'
 <proposed message for this topic>
@@ -170,13 +182,15 @@ Split complete. What's next?
 
 ### Step 8: Force Push (If Already Pushed)
 
-If the original commit was already on the remote, explain what is needed:
+If the original commit was already on the remote, first check the branch is safe to rewrite: it must not be a protected branch, and `git log origin/<branch> --format='%ae' | sort -u` should show only the user (see Protected Branches and Shared Branch Detection in `references/git-safety.md`). On a protected or shared branch: stop — the split stays local unless the team coordinates.
+
+Otherwise explain what is needed:
 
 ```
 The original commit was already on origin/<branch>. The history has been
 rewritten locally. To update the remote:
 
-  git push --force-with-lease origin <branch>
+  git push --force-with-lease --force-if-includes origin <branch>
 
 This will affect anyone else who has pulled this branch. Coordinate
 with your team before force-pushing to a shared branch.
@@ -184,7 +198,7 @@ with your team before force-pushing to a shared branch.
 Push now?
 ```
 
-If confirmed: `git push --force-with-lease origin <branch>`
+If confirmed: `git push --force-with-lease --force-if-includes origin <branch>`
 
 ## Constraints
 

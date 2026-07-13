@@ -10,7 +10,7 @@ Apply an emergency fix to production without contaminating your in-progress work
 ## Safety (always apply — even under time pressure)
 - Secret scan and conflict marker check are non-negotiable
 - Never `git add .` — stage specific files only
-- Always start hotfix from `origin/main` (freshly fetched), never from a feature branch
+- Always start hotfix from the freshly fetched production branch (`origin/$BASE`), never from a feature branch
 - Always return user to their original branch at the end
 - See `references/git-safety.md` for secret patterns
 
@@ -39,12 +39,14 @@ Confirm: "Stashed your current work. It'll be waiting when you return."
 
 If the working tree is clean: "Nothing to stash — workspace is clean."
 
-### Step 2: Create Hotfix Branch from Main
+### Step 2: Create Hotfix Branch from the Production Branch
 
-Fetch first to ensure the hotfix starts from the latest production state:
+Fetch first and determine where production lives. Default: the repo's default branch. If the repo has a `production` or `release/*` branch that deploys, use that instead — a hotfix must branch from what is actually deployed:
 
 ```bash
 git fetch origin
+BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@.*/@@'); [ -z "$BASE" ] && BASE=main
+git branch -r | grep -E 'origin/(production|release/)' || true
 ```
 
 Ask for a short description of the issue (used in the branch name):
@@ -55,13 +57,13 @@ What's broken? (brief, e.g. "login-crash" or "checkout-404")
 Sanitize the input — lowercase, spaces to hyphens, remove special characters.
 
 ```bash
-git checkout -b hotfix/<description> origin/main
+git checkout -b hotfix/<description> origin/$BASE
 ```
 
 Confirm:
 ```
 Hotfix branch created: hotfix/<description>
-Starting from: origin/main (latest)
+Starting from: origin/<base> (latest)
 ```
 
 ### Step 3: Apply the Fix
@@ -79,11 +81,11 @@ If Claude is helping write the fix:
 
 Even under time pressure, do a focused audit on the outgoing diff. A bad hotfix to production is worse than a slightly delayed one.
 
-Run against `git diff origin/main..HEAD`:
+Run against `git diff origin/$BASE..HEAD`:
 
 **Conflict markers** (would cause syntax errors in production):
 ```bash
-git diff origin/main..HEAD | grep -n "^+.*<<<<<<\|^+.*======\|^+.*>>>>>>"
+git diff origin/$BASE..HEAD | grep -n "^+.*<<<<<<\|^+.*======\|^+.*>>>>>>"
 ```
 
 **Secret patterns** — scan for patterns from `references/git-safety.md`. Block if found.
@@ -106,7 +108,7 @@ Use a `fix:` prefix — this is required for semantic versioning pipelines to re
 
 Propose a commit message from the branch name and diff:
 ```bash
-git diff --stat origin/main..HEAD
+git diff --stat origin/$BASE..HEAD
 ```
 
 ```
@@ -149,7 +151,7 @@ Create a PR to main with a HOTFIX label so it's visible in the review queue.
 
 First, check if `gh` CLI is available:
 ```bash
-command -v gh >/dev/null 2>&1
+gh auth status >/dev/null 2>&1 && echo ok || echo unavailable
 ```
 
 If not available: push the branch and create the PR manually at the GitHub web interface. Skip to Step 8.
@@ -176,7 +178,7 @@ gh pr create \
 🚨 This is a hotfix — please review and merge promptly.
 EOF
 )" \
-  --base main \
+  --base "$BASE" \
   --label "hotfix"
 ```
 
@@ -234,7 +236,7 @@ Syncing prevents conflicts later and ensures your branches build on the fixed pr
 ## Rules
 
 - Always stash before branching — never risk losing in-progress work
-- Always start the hotfix branch from `origin/main` (freshly fetched), never from a feature branch
+- Always start the hotfix branch from the freshly fetched production branch, never from a feature branch
 - The secret scan is mandatory even under time pressure — a leaked key in a hotfix is a catastrophe
 - Commit message must use `fix:` prefix — hotfixes go through the same semantic versioning as everything else
 - Always return the user to their original branch at the end — leave the workspace as found

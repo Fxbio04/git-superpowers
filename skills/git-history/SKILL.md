@@ -78,10 +78,10 @@ For a line range (when the user knows the lines or you can identify them):
 git log -p -L <start>,<end>:<file>
 ```
 
-Token-efficiency: `-p` produces a lot of output. Read the first few commits first:
+Token-efficiency: `-p` produces a lot of output. Get the bare commit list first — note the `-s`: `-L` forces patch output even with `--oneline`, and `-s` is what actually suppresses the diffs:
 
 ```bash
-git log --oneline -L :<funcname>:<file>
+git log --oneline -s -L :<funcname>:<file>
 ```
 
 Show the commit list first, then ask: "Which of these commits do you want to see in detail?"

@@ -57,6 +57,8 @@ Main is 5 commits ahead of your branch.
 Overlap analysis:
 ```
 
+**Honest caveat (state it in the report):** `git merge-tree` simulates a single-step MERGE against the tip. A rebase replays your commits one by one, so it can hit conflicts sequentially that the merge simulation doesn't show (and vice versa, `rerere` may auto-resolve some). Treat the result as a strong prediction, not a guarantee — phrase it as "no conflicts expected", never "clean rebase guaranteed".
+
 ### Step 4: Find Overlapping Files
 
 Before running any simulation, do a lightweight check for file overlap. This avoids false alarms and is fast:
@@ -185,10 +187,9 @@ git show <commit> -- <file>
 
 ## Multi-Branch Simulation
 
-When checking conflicts against multiple branches (e.g., "will fb conflict with bb AND main?"), run simulations in parallel:
+When checking conflicts against multiple branches (e.g., "will fb conflict with bb AND main?"), run all simulations in ONE Bash call — each check is fast, the win is avoiding one tool call per target:
 
 ```bash
-# Check conflicts against multiple targets simultaneously
 for target in origin/main origin/<other-branch>; do
   echo "=== vs $target ==="
   git merge-tree --write-tree HEAD $target 2>&1

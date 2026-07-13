@@ -13,6 +13,8 @@ Apply specific commits from another branch to your current branch — without br
 - Pick in chronological order (oldest first) to respect dependencies
 - Check for detached HEAD and missing remote before starting
 
+**Default branch:** Commands below write `origin/main` for readability — detect the actual default branch first (Branch Detection in `references/git-safety.md`) and substitute if the repo uses something else.
+
 ## Workflow
 
 ### Step 1: Identify the Source Branch
@@ -90,12 +92,15 @@ git show <hash>
 Before picking, check if the current branch already has an equivalent change — cherry-picking a commit that you already applied creates a confusing duplicate.
 
 ```bash
-# Check if a similar change exists
-git log --oneline --all --grep="<commit subject>" | grep -v <source-hash>
+# Patch-equivalence check: commits marked "-" already exist in HEAD as an equivalent patch
+git cherry HEAD origin/<source-branch> | grep '^-'
 
-# Also check if the file was already patched the same way
-git diff origin/main..HEAD -- <files-in-commit>
+# Softer signals: similar commit subject, or the same files already touched on your branch
+git log --oneline --grep="<commit subject>" origin/main..HEAD
+git diff --stat origin/main..HEAD -- <files-in-commit>
 ```
+
+`git cherry` compares actual patch content, not messages — if the selected hash appears with a `-`, the change is already on your branch.
 
 If similar changes are found, warn:
 ```
@@ -107,10 +112,16 @@ Cherry-picking might create a duplicate patch. Review and proceed anyway? (y/n)
 
 ### Step 5: Apply the Commits
 
-Pick commits one by one (in chronological order — oldest first to avoid dependency issues):
+Record the current tip first — Step 6 uses it to show what the picks changed:
 
 ```bash
-git cherry-pick <hash>
+ORIGINAL_TIP=$(git rev-parse HEAD)
+```
+
+Pick commits one by one (in chronological order — oldest first to avoid dependency issues). Use `-x` — it appends "(cherry picked from commit …)" to the message, so the team can trace where the change came from:
+
+```bash
+git cherry-pick -x <hash>
 ```
 
 After each successful pick, confirm:
@@ -160,8 +171,8 @@ Always keep `--abort` visible as an option while a pick is in progress.
 After all commits are applied:
 
 ```bash
-git log --oneline origin/main..HEAD   # What's now on your branch
-git diff --stat <original-tip>..HEAD  # What changed from before the pick
+git log --oneline origin/main..HEAD    # What's now on your branch
+git diff --stat $ORIGINAL_TIP..HEAD    # What changed from before the pick (recorded in Step 5)
 ```
 
 Show summary:
@@ -191,9 +202,12 @@ Then push:
 git push origin <branch>
 ```
 
+**Heads-up for later:** When the source branch eventually merges, rebasing your branch may hit the picked commits as empty duplicates — git usually skips patch-equivalent commits automatically; if a rebase stops on one, `git rebase --skip` is the answer.
+
 ## Rules
 
 - Always show `git show --stat` before applying a commit — no silent picks
+- Always pick with `-x` so the source commit stays traceable
 - Always warn about duplicate changes before proceeding
 - Always offer `--abort` while a pick is in progress
 - Pick commits in chronological order (oldest first) to respect dependencies

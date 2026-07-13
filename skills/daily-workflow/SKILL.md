@@ -21,11 +21,12 @@ Gather the current state in one pass:
 ```bash
 BRANCH=$(git branch --show-current)
 git fetch origin --quiet
-BEHIND=$(git rev-list --count HEAD..origin/main 2>/dev/null || echo "?")
-AHEAD=$(git rev-list --count origin/main..HEAD 2>/dev/null || echo "?")
+BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@.*/@@'); [ -z "$BASE" ] && BASE=main
+BEHIND=$(git rev-list --count HEAD..origin/$BASE 2>/dev/null || echo "?")
+AHEAD=$(git rev-list --count origin/$BASE..HEAD 2>/dev/null || echo "?")
 UNCOMMITTED=$(git status --porcelain | wc -l | tr -d ' ')
 UNPUSHED=$(git log --oneline origin/$BRANCH..HEAD 2>/dev/null | wc -l | tr -d ' ')
-echo "branch:$BRANCH behind:$BEHIND ahead:$AHEAD uncommitted:$UNCOMMITTED unpushed:$UNPUSHED"
+echo "branch:$BRANCH base:$BASE behind:$BEHIND ahead:$AHEAD uncommitted:$UNCOMMITTED unpushed:$UNPUSHED"
 ```
 
 Present a status summary:
@@ -97,9 +98,11 @@ You have unpushed commits.
 ```
 Branch is clean and up to date. ✓
 
-[1] Check other repos → /repo-overview
-[2] Inspect other branches → /branch-inspect
-[3] Nothing to do
+[1] Review open PRs waiting on you → /pr-review
+[2] Check CI status → /ci-fix
+[3] Check other repos → /repo-overview
+[4] Inspect other branches → /branch-inspect
+[5] Nothing to do
 ```
 
 ### Step 3: Execute the Pipeline

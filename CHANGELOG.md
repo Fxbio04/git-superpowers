@@ -2,6 +2,12 @@
 
 All notable changes to git-superpowers. Format follows [Keep a Changelog](https://keepachangelog.com/), versioning follows [SemVer](https://semver.org/).
 
+## [3.1.0] — 2026-07-13
+
+### Added
+- **`deploy-check` skill** — deploy-config safety via git, no Docker access needed: static foot-gun audit (hardcoded host ports, fixed `container_name`, missing healthcheck/restart policy, `:latest` tags, host-path volumes, committed `.env` values), **cross-branch collision matrix** (`git show branch:compose.yml` across all branches — catches two branches claiming the same host port or container name *before* the shared-VM bind error), first-deploy/new-repo audit, and infra-grade fix recommendations (auto-assigned ports + proxy routing, `${HOST_PORT:-…}` parameterization, `COMPOSE_PROJECT_NAME` scoping, healthcheck + `--wait` for zero-downtime).
+- **safe-push Check 6** — when the outgoing diff touches deploy files, the audit scans added lines for the same foot-guns and hands off to `/deploy-check` for the cross-branch view; pr-prep's audit includes it too.
+
 ## [3.0.0] — 2026-07-13
 
 Major because the new guard hook **changes runtime behavior**: commands that previously ran (with only prose rules against them) are now deterministically blocked.

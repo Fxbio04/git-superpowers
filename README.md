@@ -8,7 +8,7 @@
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License: MIT" />
   </a>
-  <img src="https://img.shields.io/badge/Skills-19-orange?style=for-the-badge" alt="19 Skills" />
+  <img src="https://img.shields.io/badge/Skills-20-orange?style=for-the-badge" alt="20 Skills" />
   <img src="https://img.shields.io/badge/Agents-4-blue?style=for-the-badge" alt="4 Agents" />
   <img src="https://img.shields.io/badge/Guard_Hook-enforced-red?style=for-the-badge" alt="Guard Hook" />
   <img src="https://img.shields.io/badge/Claude_Code-Plugin-blueviolet?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude Code Plugin" />
@@ -42,6 +42,7 @@ Then just talk to Claude:
 "review bobby's PR"                            → pr-review
 "warum ist die CI rot?"                        → ci-fix
 "neue version releasen"                        → release
+"wird das deployment krachen?"                 → deploy-check
 "wo steh ich überall"                          → repo-overview
 "alles auf einmal — commit, push, PR"          → daily-workflow
 ```
@@ -59,6 +60,7 @@ Then just talk to Claude:
 | Avoidable mistakes | Secrets in diff, conflict markers, force push | Guard hook blocks them deterministically |
 | PR friction | Unpushed branches, ignored templates, duplicate PRs, red CI | Full PR lifecycle: prep → review → ci-fix → release |
 | Team damage | Force-push on shared/protected branches rewrites teammates' history | Protected-branch refusal + shared-branch detection |
+| Branch deploy crashes the VM | Hardcoded host ports / container names collide with the running stack | Cross-branch deploy-config collision matrix |
 | Hard to trace | Who changed what, when, and why | Narrative git history |
 
 ---
@@ -106,6 +108,12 @@ Then just talk to Claude:
 | `pr-review` | The other side: reviews a teammate's PR — diff analysis, drafted verdict + inline comments, submitted only after your approval. |
 | `ci-fix` | Red checks → fetches only the failed step logs, isolates the first real error, reproduces locally, fixes the cause (never the symptom), watches it go green. |
 | `release` | Semver bump derived from commits, version-file sync, annotated tag, `gh release create` with curated notes. |
+
+### Deploy Safety
+
+| Skill | What it does |
+|---|---|
+| `deploy-check` | Finds deploy-config foot-guns via git — hardcoded host-port collisions **across branches** (the classic shared-VM crash), fixed `container_name`, missing healthchecks for zero-downtime, `:latest` tags, first-deploy audit. Read-only, no Docker access needed; recommends the infra-grade fix (dynamic ports, proxy, `COMPOSE_PROJECT_NAME`). |
 
 ### History & Recovery
 
@@ -209,7 +217,7 @@ topics:
 
 ```
 git-superpowers/
-├── skills/              # 19 Skills (SKILL.md each)
+├── skills/              # 20 Skills (SKILL.md each)
 ├── agents/              # 4 Subagents (read-only tools, spawned by skills)
 ├── hooks/               # git-guard.sh (PreToolUse) + its test suite
 ├── references/          # 5 Shared references

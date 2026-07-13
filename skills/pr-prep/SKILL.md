@@ -1,182 +1,128 @@
 ---
 name: pr-prep
-description: Audit branch, generate PR description from commits, create PR via gh CLI. Triggers: "PR erstellen", "pull request", "ready for merge", "branch fertig", "PR aufmachen", /pr-prep.
+description: Audit branch, generate PR description from commits, create or update the PR via gh CLI — with template, draft, reviewer and base-branch support. Triggers: "PR erstellen", "pull request", "ready for merge", "branch fertig", "PR aufmachen", "PR aktualisieren", "update PR", /pr-prep.
 ---
 
 # PR Prep
 
-Turn your branch into a clean, reviewable pull request. This skill audits for issues, checks for conflicts with main, generates a clear description, and creates the PR — so reviewers get context without asking.
+Turn your branch into a clean, reviewable pull request — or update the one that already exists. This skill audits for issues, checks for conflicts with the base branch, generates a description that follows the repo's template, pushes the branch, and creates the PR.
 
 ## Safety (always apply)
-- Never create a PR with conflict markers in the diff
-- Always scan for secrets before creating PR (see `references/git-safety.md` for patterns)
-- Always run conflict dry-run — reviewers will notice conflicts
+- Never create a PR with conflict markers or secrets in the diff (see `references/git-safety.md` for patterns)
+- Always run the conflict dry-run — reviewers will notice conflicts
+- Never rebase/force-push a branch with an open, reviewed PR without explicit confirmation — it invalidates review context and re-triggers CI
 - PR description must have a Test Plan section
+- Adapt verbosity to the user (see Adaptive Output in `references/git-safety.md`)
 
 ## Workflow
 
-### Step 1: Branch Status Check
+### Step 1: Preflight
+
+Run in one Bash call:
 
 ```bash
 git fetch origin
-git branch --show-current
+BRANCH=$(git branch --show-current)
+BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+[ -z "$BASE" ] && { git rev-parse --verify -q origin/main >/dev/null && BASE=main || BASE=master; }
 git status --porcelain
-git log --oneline origin/main..HEAD
+gh auth status >/dev/null 2>&1 && echo "gh:ok" || echo "gh:unavailable"
 ```
 
-If there are uncommitted changes, stop:
-```
-You have uncommitted changes. Commit or stash them before creating a PR.
-Run smart-commit to commit them, or: git stash push -m "pr-prep stash"
-```
+- **Uncommitted changes** → stop: "Commit or stash first — run /smart-commit, or: `git stash push -m 'pr-prep stash'`"
+- **`gh:unavailable`** → continue through the audit, but end with title + description formatted for copy-paste instead of creating the PR. If `gh` is installed but not authenticated, say so: `gh auth login` fixes it.
+- **On the base branch itself** (`$BRANCH` = `$BASE`) → stop: PRs need a feature branch. Offer to create one from the current state.
+- **Base override:** If the user targets a different base (`develop`, a release branch, or another feature branch for a stacked PR), set `$BASE` accordingly — everything below uses `$BASE`, never a hardcoded `main`.
 
-If no commits ahead of main: "This branch has no commits ahead of main — nothing to PR."
-
-Show the summary:
-```
-Branch: fb
-Status: 5 commits ahead of main, 0 uncommitted changes
-
-Commits that will be in this PR:
-  a1b2c3d feat(amazon): add analytics dashboard
-  d4e5f6g feat(amazon): KPI grid component
-  e7f8g9h fix(amazon): correct currency formatting
-  f1g2h3i chore(deps): add react-charts
-  j4k5l6m refactor(utils): extract API helpers
-```
-
-### Step 2: Check if Behind Main
+### Step 2: Does a PR Already Exist?
 
 ```bash
-git log --oneline HEAD..origin/main
+gh pr list --head "$BRANCH" --state open --json number,title,url,reviewDecision,isDraft --jq '.[0]'
 ```
 
-If there are commits: warn the user.
+**If a PR exists → switch to update mode:**
 
 ```
-Your branch is 8 commits behind main.
-This means:
-- Reviewers may see conflicts in the PR diff
-- The merge may fail if conflicts exist
+PR #142 already exists for this branch: "feat: amazon dashboard" (review: CHANGES_REQUESTED)
 
-Recommended: run smart-sync first to rebase onto the latest main.
-Skip anyway? (y/n)
+[1] Push new commits to the PR (updates it automatically)
+[2] Also update title/description (gh pr edit)
+[3] Mark ready for review (currently draft)
+[4] Just show me the PR status
 ```
 
-Only continue on explicit confirmation. Remember to re-fetch after sync.
+In update mode: skip Step 6's create, push the new commits (Step 5), then `gh pr edit` if requested. If the PR has reviews and the user wants to rebase, warn first (see Safety). Offer `gh pr comment` to summarize what changed since the last review — reviewers shouldn't have to re-read the whole diff.
 
-### Step 3: Safety Audit
+**If no PR exists** → continue.
 
-Run the same checks as safe-push — these are the things reviewers will catch if you don't. Read `references/git-safety.md` for the full list of secret patterns.
+### Step 3: Branch Status + Audit
 
-Scan `git diff origin/main..HEAD` for:
-
-**Debug artifacts:**
-- `console.log`, `console.debug`, `debugger` (outside test files)
-
-**Conflict markers:**
 ```bash
-git diff origin/main..HEAD | grep -n "^+.*<<<<<<\|^+.*======\|^+.*>>>>>>"
+git log --oneline origin/$BASE..HEAD
+git log --oneline HEAD..origin/$BASE | wc -l
 ```
 
-**Secret patterns:**
-Scan added lines for patterns from `references/git-safety.md` (API keys, tokens, connection strings).
+If no commits ahead: "Nothing to PR." Stop. Show the outgoing commits (these become the PR).
 
-**Incomplete code signals:**
-- Imports referencing files not present in the branch
-- TODO/FIXME/HACK in new code
-- Commented-out code blocks
+If behind `$BASE`: warn — reviewers may see conflicts; recommend /smart-sync first (re-fetch after). Skip only on explicit confirmation.
 
-If issues found, show them and ask:
-```
-Issues found before creating PR:
-[1] console.log in src/amazon/dashboard.tsx:45
-[2] TODO in src/utils/api.ts:12 — "TODO: add error handling"
-
-Fix these before creating the PR? (recommended)
-[f] Fix all  [s] Skip and create PR anyway  [c] Cancel
-```
+Then audit `git diff origin/$BASE..HEAD` in a single pass (same checks as safe-push): debug artifacts, conflict markers, secret patterns (`references/git-safety.md`), TODO/FIXME in new code, imports referencing files missing from the branch. If issues found, list them numbered and offer: **[f] Fix all  [s] Skip  [c] Cancel**.
 
 ### Step 4: Conflict Dry-Run
 
-Check whether this branch would conflict with main if merged right now. This is a read-only simulation — it does not touch your branch.
-
-Run a quick conflict check using the conflict-simulator approach:
+Read-only simulation against the base:
 
 ```bash
-# Check exit status: 0 = clean, 1 = conflicts
-git merge-tree --write-tree HEAD origin/main >/dev/null 2>&1
-RESULT=$?
+git merge-tree --write-tree HEAD origin/$BASE >/dev/null 2>&1   # 0 = clean, 1 = conflicts
 ```
 
-If conflicts are predicted (`RESULT=1`), warn the user and suggest running `/smart-sync` first. For detailed conflict analysis, suggest `/conflict-simulator`.
-
-If `git merge-tree --write-tree` is not available (git < 2.38), fall back to file overlap check:
+Fallback for git < 2.38 — file overlap:
 ```bash
-MERGE_BASE=$(git merge-base HEAD origin/main)
+MERGE_BASE=$(git merge-base HEAD origin/$BASE)
 comm -12 \
   <(git diff --name-only $MERGE_BASE..HEAD | sort) \
-  <(git diff --name-only $MERGE_BASE..origin/main | sort)
+  <(git diff --name-only $MERGE_BASE..origin/$BASE | sort)
 ```
 
-Report:
-```
-Conflict Simulation Result:
-  2 files would conflict if merged now:
-  - src/amazon/api.ts (both branches modified)
-  - src/routes.tsx (both branches modified)
+Conflicts predicted → name the files, recommend /smart-sync (or /conflict-simulator for detail), continue only on confirmation. Clean → say so in one line.
 
-These will show as conflicts in the PR. Run smart-sync to resolve them before merging.
-Continue anyway? (y/n)
-```
+### Step 5: Push the Branch
 
-If no conflicts: "No conflicts — this branch merges cleanly into main."
-
-### Step 5: Generate PR Description
-
-Read the commits and their diffs to build a structured description.
+`gh pr create` needs the branch on the remote — push before creating, never assume:
 
 ```bash
-git log --format="%s%n%b" origin/main..HEAD   # subject + body for each commit
-git diff --stat origin/main..HEAD             # file summary
+git rev-parse --verify -q origin/$BRANCH >/dev/null \
+  && git log --oneline origin/$BRANCH..HEAD \
+  || echo "no upstream"
+git push -u origin "$BRANCH"
 ```
 
-Group commits by topic: commits sharing a scope (`feat(amazon)`, `fix(amazon)`) belong together. Read `references/topic-detection.md` for grouping logic.
+If the push is rejected because the remote branch has newer commits (someone else pushed to it), stop and run the remote-changes handling from safe-push — do not force-push here.
 
-Draft the description using this format:
+### Step 6: Generate Description + Create
+
+**Template first:** check for a repo template and use its structure if present — teams with a required template will reject free-form bodies:
+
+```bash
+ls .github/PULL_REQUEST_TEMPLATE.md .github/pull_request_template.md \
+   .github/PULL_REQUEST_TEMPLATE/*.md docs/pull_request_template.md 2>/dev/null
+```
+
+Build the content from the commits (`git log --format="%s%n%b" origin/$BASE..HEAD` + `git diff --stat origin/$BASE..HEAD`), grouped by topic (`references/topic-detection.md`). No template → use this structure:
 
 ```markdown
 ## Summary
-- Added Amazon analytics dashboard with KPI overview and trend charts
-- Refactored API utilities into a shared helper module
+- <what changed, from the reader's perspective — 2-4 bullets>
 
 ## Changes
-
-### Amazon Analytics
-- `DashboardView` — main view with KPI grid (revenue, orders, returns)
-- `KPICard` component with sparkline trend support
-- Fixed currency formatting for EUR/USD display
-
-### Infrastructure
-- Added `react-charts` dependency (v2.1)
-- Extracted `fetchWithRetry` and `buildQueryParams` into `src/utils/api.ts`
+### <Topic>
+- <component/behavior level, not file level>
 
 ## Test Plan
-- [ ] Open /amazon in dev — dashboard loads without errors
-- [ ] KPI cards show correct values from API
-- [ ] Currency formatting correct for EUR and USD
-- [ ] Charts render on different screen sizes
-- [ ] Existing routes still work (no regression)
+- [ ] <concrete verification steps a reviewer can run>
 ```
 
-Show the draft and ask:
-```
-PR Description draft — review and edit, or press Enter to use as-is:
-```
-
-Let the user edit the title and body. Suggest a title from the most significant commit or the branch name.
-
-### Step 6: Create the PR
+Show the draft; let the user edit title and body. Title: from the most significant commit, in the repo's commit style. Then ask two quick options in one question: **Draft PR?** (default no; yes if work-in-progress) and **Reviewers?** (suggest from `CODEOWNERS` if present; skip if none).
 
 ```bash
 gh pr create \
@@ -185,27 +131,35 @@ gh pr create \
 <description>
 EOF
 )" \
-  --base main \
-  --head <branch>
+  --base "$BASE" \
+  --head "$BRANCH" \
+  [--draft] [--reviewer <handles>]
 ```
 
-If `gh` is not installed: show the title and description formatted for copy-paste into GitHub.
+### Step 7: After Creation
 
-After creation, show:
-```
-PR created: https://github.com/<org>/<repo>/pull/<number>
-
-Next steps:
-- Share the PR URL with reviewers
-- After the PR is merged, sync your other branches: run smart-sync on each
+```bash
+gh pr checks "$BRANCH" 2>/dev/null
 ```
 
-**Note on GitHub Rebase:** If the repo uses "Rebase and merge" as the merge method, GitHub will create new commit SHAs even for identical changes. This means after your PR is merged, your local branch will diverge from main even though the code is the same. Run `/smart-sync` after merge to clean up.
+Show the PR URL and CI status. If checks are failing or pending, offer to watch them (`gh pr checks --watch`) or diagnose failures with /ci-fix. Suggest next steps:
+
+```
+PR created: <url>   (checks: 2 pending)
+
+- Reviewers notified: <handles or "add on GitHub">
+- When checks fail: /ci-fix
+- After merge: /smart-sync your other branches
+```
+
+**Note on GitHub Rebase:** If the repo uses "Rebase and merge", GitHub creates new commit SHAs even for identical changes — after merge, your local branch diverges from the base although the code is the same. Run /smart-sync after merge to clean up.
 
 ## Rules
 
+- Never hardcode the base branch — detect it, and honor user overrides (develop, release/*, stacked PRs)
+- Never call `gh pr create` before the branch is pushed and up to date on origin
+- Never create a duplicate PR — check for an existing one first and update it instead
 - Never create a PR with conflict markers in the diff
-- Never create a PR without showing the outgoing commits first
-- Always run the conflict dry-run — reviewers will notice conflicts, even if the user doesn't ask
+- Respect `.github/PULL_REQUEST_TEMPLATE.md` when it exists
 - The PR description must have a Test Plan section — reviewers need to know what to verify
-- The conflict check uses read-only git merge-tree — no cleanup needed
+- The conflict check uses read-only `git merge-tree` — no cleanup needed

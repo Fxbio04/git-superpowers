@@ -61,6 +61,8 @@ For each file in the diff, understand:
 
 For each changed file, reason through these categories. Only flag something if there is a genuine issue — not a hypothetical.
 
+<!-- sync:review-categories — keep this category list identical to agents/code-reviewer.md -->
+
 **Logic errors and bugs**
 - Control flow that can't work as written
 - Off-by-one errors in loops or array access

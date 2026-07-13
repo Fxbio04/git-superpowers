@@ -34,14 +34,16 @@ Format: "N commits to push to origin/`<branch>`:" followed by commit list and fi
 
 ### Step 1.5: Conflict Prediction
 
-Before auditing code quality, check if your branch will have conflicts when rebasing onto main later. This uses the conflict-simulator approach:
+Before auditing code quality, check if your branch will have conflicts when rebasing onto the default branch later. Detect it first (see Branch Detection in `references/git-safety.md`), then run the overlap check:
 
 ```bash
-# Quick overlap check: files changed in both your branch and main
-MERGE_BASE=$(git merge-base HEAD origin/main)
+BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+[ -z "$BASE" ] && { git rev-parse --verify -q origin/main >/dev/null && BASE=main || BASE=master; }
+# Quick overlap check: files changed in both your branch and $BASE
+MERGE_BASE=$(git merge-base HEAD origin/$BASE)
 comm -12 \
   <(git diff --name-only $MERGE_BASE..HEAD | sort) \
-  <(git diff --name-only $MERGE_BASE..origin/main | sort)
+  <(git diff --name-only $MERGE_BASE..origin/$BASE | sort)
 ```
 
 If overlapping files exist, warn:
@@ -83,9 +85,17 @@ Read the diff semantically:
 - Are there TODO/FIXME/HACK comments in new code?
 
 **Check 5: Large Files**
+
+`--stat` misses binaries (they show as `Bin`), and `\d` doesn't work in POSIX grep — check actual blob sizes in the outgoing commits instead:
+
 ```bash
-git diff --stat origin/<branch>..HEAD | grep -E '\d{4,} \+'
+git rev-list --objects origin/<branch>..HEAD \
+  | git cat-file --batch-check='%(objectsize) %(objecttype) %(rest)' \
+  | awk '$2 == "blob" && $1 > 1048576 {printf "%.1f MB  %s\n", $1/1048576, $3}' \
+  | sort -rn
 ```
+
+Anything over 1 MB gets flagged; over 50 MB will be rejected by GitHub outright. For accidentally committed binaries, offer to remove them from the outgoing commits before pushing (and suggest Git LFS if they're intentional).
 
 ### Step 3: Report and Fix
 

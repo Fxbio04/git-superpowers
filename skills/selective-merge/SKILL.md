@@ -111,10 +111,10 @@ How do you want to take src/api/orders.ts from origin/feature-bobby?
 **Replace (option 1):**
 
 ```bash
-git checkout origin/<branch> -- <file>
+git restore --source=origin/<branch> --worktree -- <file>
 ```
 
-The file is now in the working tree and staged with the other branch's content.
+The file now has the other branch's content in the working tree — deliberately NOT staged, so it goes through the normal staging flow in Step 6 like any other change. (The older `git checkout origin/<branch> -- <file>` would stage it as a side effect.)
 
 **Merge parts (option 2):**
 

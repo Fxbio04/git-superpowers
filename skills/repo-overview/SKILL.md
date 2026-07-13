@@ -22,28 +22,22 @@ Use these sources in order — stop as soon as you have results:
 
 **2. Config:** If `.claude-git.yml` exists in the current or home directory with `scan_dirs`, use those paths.
 
-**3. macOS Spotlight (instant, no disk scan):**
-```bash
-mdfind "kMDItemFSName == '.git'" -onlyin ~ 2>/dev/null \
-  | grep -v 'node_modules\|\.cache\|\.claude/plugins\|Library\|\.Trash\|\.npm\|\.nvm\|Caches' \
-  | sed 's/\/.git$//' | sort -u
-```
-
-**4. Linux locate (fast, uses index):**
+**3. Linux locate (fast, uses index):**
 ```bash
 locate -r '/\.git$' 2>/dev/null | grep "^$HOME" \
   | grep -v 'node_modules\|\.cache\|\.claude/plugins\|Library\|\.Trash\|\.npm\|\.nvm\|Caches' \
   | sed 's/\/.git$//' | sort -u
 ```
 
-**5. Fallback (slow, only if nothing else works):**
+**4. Filesystem scan (macOS default — Spotlight does NOT index hidden dirs like `.git`, so `mdfind` finds nothing; pruned `find` is the reliable way):**
 ```bash
-find ~ -maxdepth 4 -name ".git" -type d \
-  -not -path "*/node_modules/*" -not -path "*/.cache/*" \
-  -not -path "*/.claude/plugins/*" -not -path "*/Library/*" \
-  -not -path "*/.Trash/*" -not -path "*/.npm/*" -not -path "*/.nvm/*" \
-  2>/dev/null | sed 's/\/.git$//' | sort -u
+find ~ -maxdepth 4 \
+  \( -name node_modules -o -name Library -o -name .Trash -o -name .npm \
+     -o -name .nvm -o -name .cache -o -name Caches -o -path "*/.claude/plugins" \) -prune \
+  -o -type d -name ".git" -print 2>/dev/null | sed 's/\/.git$//' | sort -u
 ```
+
+`-prune` skips whole subtrees instead of filtering results afterwards — on a big home directory that's the difference between ~2s and ~30s.
 
 Keep the list manageable — if more than 20 repos are found, show only those with recent activity (committed within last 30 days).
 
@@ -64,8 +58,10 @@ wait
 for path in /path/to/repo1 /path/to/repo2 /path/to/repo3; do
   name=$(basename "$path")
   branch=$(git -C "$path" branch --show-current 2>/dev/null || echo "detached")
-  behind=$(git -C "$path" rev-list --count HEAD..origin/main 2>/dev/null || echo "?")
-  ahead=$(git -C "$path" rev-list --count origin/main..HEAD 2>/dev/null || echo "?")
+  base=$(git -C "$path" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@.*/@@')
+  [ -z "$base" ] && base=main
+  behind=$(git -C "$path" rev-list --count HEAD..origin/$base 2>/dev/null || echo "?")
+  ahead=$(git -C "$path" rev-list --count origin/$base..HEAD 2>/dev/null || echo "?")
   changes=$(git -C "$path" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
   last=$(git -C "$path" log --oneline -1 --format='%cr' 2>/dev/null || echo "no commits")
   remote_url=$(git -C "$path" remote get-url origin 2>/dev/null || echo "no remote")
@@ -73,9 +69,9 @@ for path in /path/to/repo1 /path/to/repo2 /path/to/repo3; do
 done
 ```
 
-This runs everything in ONE Bash call and outputs a parseable table. The parallel fetch at the top ensures all repos are up to date before reading status.
+This runs everything in ONE Bash call and outputs a parseable table. The parallel fetch at the top ensures all repos are up to date before reading status. The per-repo `$base` detection handles repos whose default branch isn't `main`.
 
-Handle repos without a remote or without `origin/main` — fall back to `origin/master` or show "no remote".
+Handle repos without a remote — show "no remote" instead of numbers.
 
 ### Step 3: Display Dashboard
 
@@ -103,11 +99,14 @@ After showing local repos, check if `gh` CLI is available and authenticated:
 gh auth status 2>/dev/null
 ```
 
-If available, list repos from the user's GitHub organizations that aren't cloned locally:
+If available, list repos from the user's GitHub organizations that aren't cloned locally. Note: `gh repo list` without an argument only lists the user's OWN repos — org repos need the org name:
 
 ```bash
-# List all repos from user's orgs
-gh repo list --limit 50 --json name,owner,updatedAt,defaultBranchRef --jq '.[] | "\(.owner.login)/\(.name) \(.updatedAt)"'
+# Own repos + each org's repos
+gh repo list --limit 50 --json nameWithOwner,updatedAt --jq '.[] | "\(.nameWithOwner) \(.updatedAt)"'
+for org in $(gh api user/orgs --jq '.[].login' 2>/dev/null); do
+  gh repo list "$org" --limit 50 --json nameWithOwner,updatedAt --jq '.[] | "\(.nameWithOwner) \(.updatedAt)"'
+done
 ```
 
 Compare with local repos (by name matching). Show repos that exist on GitHub but not locally:
@@ -166,7 +165,7 @@ The entire dashboard scan uses ~2 lines of output per repo. For 10 repos, that's
 ## Edge Cases
 
 - **Repo without remote**: Show "no remote" in Behind/Ahead columns
-- **Repo on main/master**: Skip behind/ahead (it IS main)
+- **Repo on the default branch**: Behind/Ahead still applies — it compares to `origin/<default>`, i.e. unpulled/unpushed commits
 - **Detached HEAD**: Show the commit hash instead of branch name
 - **Fetch fails**: Show last known state, note "(offline)" next to the repo
 - **Non-standard main branch**: Use `git symbolic-ref refs/remotes/origin/HEAD` to detect

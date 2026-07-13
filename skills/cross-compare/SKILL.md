@@ -12,6 +12,8 @@ Compare a specific file, module, or directory across all branches that have touc
 - Use `--stat` first, full diffs only on explicit request
 - Check for detached HEAD and missing remote before starting
 
+**Default branch:** Commands below write `origin/main` for readability — detect the actual default branch first (Branch Detection in `references/git-safety.md`) and substitute if the repo uses something else.
+
 ## Workflow
 
 ### Step 1: Identify the Target
@@ -69,21 +71,30 @@ Format as a comparison table: Branch | Commits | +Lines | -Lines | Summary. For 
 
 ### Step 4: Conflict Prediction
 
-Find branches that both modified the target path and check how their changes overlap:
+For each pair of branches that both modified the target, ask git itself whether they collide — `git merge-tree` is read-only and gives the real answer (comparing line numbers from two diverged diffs does not — the numbers refer to different file states):
 
 ```bash
-# Lines changed in branch A vs branch B (not vs main)
-comm -12 \
-  <(git diff --unified=0 origin/main...origin/<branch-A> -- <path> | grep '^@@' | grep -oE '\+[0-9]+' | tr -d '+' | sort) \
-  <(git diff --unified=0 origin/main...origin/<branch-B> -- <path> | grep '^@@' | grep -oE '\+[0-9]+' | tr -d '+' | sort)
+# 0 = would merge cleanly, 1 = real conflicts (git >= 2.38)
+git merge-tree --write-tree origin/<branch-A> origin/<branch-B> >/dev/null 2>&1; echo $?
+
+# Which files conflict:
+git merge-tree --write-tree --name-only origin/<branch-A> origin/<branch-B> 2>/dev/null | tail -n +2
 ```
 
-Report collision risk for each pair of branches that both modified the target. Format: `branch_a ↔ branch_b: RISK_LEVEL` with a one-line explanation.
+Fallback for git < 2.38 — file-level overlap only (cannot see line ranges across diverged branches):
+```bash
+MB=$(git merge-base origin/<branch-A> origin/<branch-B>)
+comm -12 \
+  <(git diff --name-only $MB..origin/<branch-A> -- <path> | sort) \
+  <(git diff --name-only $MB..origin/<branch-B> -- <path> | sort)
+```
+
+Report collision risk for each pair. Format: `branch_a ↔ branch_b: RISK_LEVEL` with a one-line explanation.
 
 Risk levels:
-- **HIGH**: Both branches modified the same file in overlapping line ranges
-- **MEDIUM**: Both modified the same file but in different sections
-- **LOW**: Only one branch modified the file, or changes are in separate files within the path
+- **HIGH**: `merge-tree` reports conflicts in files under the target path
+- **MEDIUM**: Both modified the same file, but `merge-tree` merges it cleanly (semantic review still wise)
+- **LOW**: Changes are in separate files within the path
 
 ### Step 5: Optional — Show Full Diff
 
@@ -114,5 +125,5 @@ Offer to run `cherry-pick` or `branch-inspect` for deeper follow-up.
 
 - Always use `--stat` first; read full diffs only on explicit request
 - Use `git log --oneline` for commit summaries (1 line per commit)
-- The `comm` overlap check is text-based — no large diff reads needed for collision detection
+- The `merge-tree` collision check happens entirely inside git — no large diff reads needed for collision detection
 - If more than 5 branches are relevant, ask the user to narrow down before running full analysis

@@ -157,18 +157,34 @@ Commits that will be removed from <wrong-branch>:
 They will still exist on <correct-branch>. Proceed? (y/n)
 ```
 
+How to remove them depends on whether the mistake was already pushed — check first:
+
+```bash
+git log --oneline origin/<wrong-branch>..HEAD
+```
+
+**Mistake NOT pushed yet** (the commits appear in the output): the remote is still clean — just reset the local branch to it. No force push needed:
+
 ```bash
 git reset --hard origin/<wrong-branch>
-# or if wrong-branch was ahead of origin before the mistake:
-git reset --hard HEAD~<N>
 ```
 
-Then push to clear the remote if needed:
+**Mistake already pushed** (output is empty — remote has the bad commits too): resetting to origin would be a no-op. Reset to the last good commit and rewrite the remote:
+
 ```bash
-git push --force-with-lease origin <wrong-branch>
+git log --oneline -10                      # identify the last good commit
+git reset --hard <last-good-sha>
+git push --force-with-lease --force-if-includes origin <wrong-branch>
 ```
 
-Explain why `--force-with-lease` is used (safer than `--force` — fails if someone else pushed).
+**Exception — wrong branch is protected or shared** (main/master/develop, or a branch others work on — see Protected Branches in `references/git-safety.md`): never force-push it. Revert instead, which is safe for everyone who already pulled:
+
+```bash
+git revert <bad-sha-1> <bad-sha-2> --no-edit
+git push origin <wrong-branch>
+```
+
+Explain the difference: `--force-with-lease --force-if-includes` fails if someone else pushed meanwhile; `revert` keeps history intact and is the only correct option once teammates may have the commits.
 
 ### Scenario 5: Accidentally Deleted or Overwrote a File
 

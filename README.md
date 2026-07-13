@@ -8,15 +8,20 @@
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License: MIT" />
   </a>
-  <img src="https://img.shields.io/badge/Skills-16-orange?style=for-the-badge" alt="16 Skills" />
+  <img src="https://img.shields.io/badge/Skills-19-orange?style=for-the-badge" alt="19 Skills" />
   <img src="https://img.shields.io/badge/Agents-4-blue?style=for-the-badge" alt="4 Agents" />
+  <img src="https://img.shields.io/badge/Guard_Hook-enforced-red?style=for-the-badge" alt="Guard Hook" />
   <img src="https://img.shields.io/badge/Claude_Code-Plugin-blueviolet?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude Code Plugin" />
   <img src="https://img.shields.io/badge/Dependencies-0-brightgreen?style=for-the-badge" alt="Zero Dependencies" />
+  <a href="https://github.com/Fxbio04/git-superpowers/actions/workflows/validate.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/Fxbio04/git-superpowers/validate.yml?style=for-the-badge&label=validate" alt="CI" />
+  </a>
 </p>
 
 <p align="center">
-  AI-powered Git workflows for Claude Code.<br>
-  Topic-based commits, smart rebasing, multi-repo overview, pre-push auditing, conflict prediction — and more.
+  AI-powered Git & GitHub workflows for Claude Code.<br>
+  Topic-based commits, smart rebasing, the full PR lifecycle (create → review → CI-fix → release),<br>
+  conflict prediction — with safety rules that are <em>enforced by a hook</em>, not just written down.
 </p>
 
 ---
@@ -33,8 +38,11 @@ Then just talk to Claude:
 "commit nur den bugfix, nicht das feature"     → smart-commit
 "sync my branch"                               → smart-sync
 "pushen"                                       → safe-push
+"PR aufmachen"                                 → pr-prep
+"review bobby's PR"                            → pr-review
+"warum ist die CI rot?"                        → ci-fix
+"neue version releasen"                        → release
 "wo steh ich überall"                          → repo-overview
-"wird es conflicts geben?"                     → conflict-simulator
 "alles auf einmal — commit, push, PR"          → daily-workflow
 ```
 
@@ -48,7 +56,9 @@ Then just talk to Claude:
 | Merge conflict chaos | Conflicts in files with changes from different topics | Topic-aware conflict resolution |
 | Unfinished code pushed | Debug statements, forgotten TODOs, missing files | Pre-push audit with auto-fix |
 | No overview | Hard to see where all repos stand | Multi-repo dashboard |
-| Avoidable mistakes | Secrets in diff, conflict markers, force push | Proactive detection + blocking |
+| Avoidable mistakes | Secrets in diff, conflict markers, force push | Guard hook blocks them deterministically |
+| PR friction | Unpushed branches, ignored templates, duplicate PRs, red CI | Full PR lifecycle: prep → review → ci-fix → release |
+| Team damage | Force-push on shared/protected branches rewrites teammates' history | Protected-branch refusal + shared-branch detection |
 | Hard to trace | Who changed what, when, and why | Narrative git history |
 
 ---
@@ -68,7 +78,7 @@ Then just talk to Claude:
 
 | Skill | What it does |
 |---|---|
-| `repo-overview` | Dashboard across all repos: branch, behind/ahead, uncommitted changes. Finds repos via Spotlight/locate. Offers actions per repo. |
+| `repo-overview` | Dashboard across all repos: branch, behind/ahead, uncommitted changes. Discovers repos via config/locate/pruned find, plus uncloned org repos via `gh`. |
 | `branch-inspect` | Shows what other branches are doing. Who committed what, file overlaps, predicted conflicts. Cross-branch overlap matrix. |
 | `cross-compare` | Compares a file or module across branches side-by-side. Collision forecast for each pair. |
 | `conflict-simulator` | Predicts conflicts without touching your branch (read-only). Uses `git merge-tree` for accurate simulation. Severity ratings per file. |
@@ -88,13 +98,21 @@ Then just talk to Claude:
 | `selective-merge` | Takes specific files (not commits) from another branch. Replace completely or merge specific parts. |
 | `hotfix` | Emergency workflow: stash → branch from main → fix → audit → push → PR → return to previous branch. |
 
+### Pull Requests, CI & Releases
+
+| Skill | What it does |
+|---|---|
+| `pr-prep` | Audits branch, conflict dry-run, pushes, respects the repo's PR template, creates or updates the PR via `gh` (draft, reviewers, base override, stacked PRs). |
+| `pr-review` | The other side: reviews a teammate's PR — diff analysis, drafted verdict + inline comments, submitted only after your approval. |
+| `ci-fix` | Red checks → fetches only the failed step logs, isolates the first real error, reproduces locally, fixes the cause (never the symptom), watches it go green. |
+| `release` | Semver bump derived from commits, version-file sync, annotated tag, `gh release create` with curated notes. |
+
 ### History & Recovery
 
 | Skill | What it does |
 |---|---|
 | `git-history` | File/function/line history as a readable narrative. Who changed what, when, why — not raw git output. |
-| `git-undo` | Safe recovery: undo commits, revert pushes, restore files, escape bad rebases. Always shows the safest option first. |
-| `pr-prep` | Audits branch, runs conflict dry-run, generates PR description from commits, creates PR via `gh`. |
+| `git-undo` | Safe recovery: undo commits, revert pushes, restore files, escape bad rebases. Always shows the safest option first — and never force-pushes shared branches. |
 
 ### Agents (spawned by skills for complex tasks)
 
@@ -145,15 +163,25 @@ Skills adjust to your experience level:
 - **Experienced**: Terse output, skip menus, quick mode
 - **Default**: Brief explanations, `[Enter]` for safe choice
 
-### Safety
+### Safety — enforced, not just written down
 
-- Never `git add .` — always specific files
-- Never `--force` — always `--force-with-lease`
-- Always show what will happen before it happens
-- Always confirm before destructive operations
+A PreToolUse hook (`hooks/git-guard.sh`) deterministically blocks the dangerous patterns, so safety doesn't depend on the model remembering rules:
+
+- `git add .` / `-A` → blocked (stage specific files)
+- bare `git push --force` → blocked (use `--force-with-lease --force-if-includes`)
+- `--no-verify` → blocked (fix the hook failure instead)
+- any force-push to `main`/`master`/`develop`/`staging`/`production`/`release/*` → blocked
+
+The prose rules cover what a regex can't judge:
+
+- Protected & shared branches: history rewrites refused, `git revert` offered instead
+- Shared-branch detection (multi-author check) before any force push
+- Repo conventions respected: merge-vs-rebase and commit style detected, not imposed
+- Always show what will happen before it happens; confirm before destructive operations
 - Secret scanning before every push (non-negotiable)
-- Fix problems directly — not just warnings
 - Worktree, detached HEAD, shallow clone detection
+
+Deliberate exception (run it yourself, not via Claude): `GIT_SUPERPOWERS_UNSAFE=1 <command>`
 
 ---
 
@@ -181,17 +209,20 @@ topics:
 
 ```
 git-superpowers/
-├── skills/              # 16 Skills (SKILL.md each)
-├── agents/              # 4 Subagents (spawned by skills)
-└── references/          # 5 Shared references
-    ├── git-safety.md        # Safety rules + adaptive output
-    ├── topic-detection.md   # Progressive topic grouping
-    ├── hunk-analysis.md     # Hunk-level selective staging
-    ├── conflict-resolution.md  # Topic-aware conflict strategy
-    └── branch-history.md    # Efficient git history commands
+├── skills/              # 19 Skills (SKILL.md each)
+├── agents/              # 4 Subagents (read-only tools, spawned by skills)
+├── hooks/               # git-guard.sh (PreToolUse) + its test suite
+├── references/          # 5 Shared references
+│   ├── git-safety.md        # Safety rules, protected branches, adaptive output
+│   ├── topic-detection.md   # Progressive topic grouping
+│   ├── hunk-analysis.md     # Hunk-level selective staging
+│   ├── conflict-resolution.md  # Topic-aware conflict strategy
+│   └── branch-history.md    # Efficient git history commands
+├── scripts/validate.py  # Structure validation (runs in CI and locally)
+└── .github/workflows/   # CI: validation + hook regression tests
 ```
 
-**Pure skills, zero dependencies.** Everything runs through Claude's native capabilities — reading diffs, understanding code, executing git commands. No scripts, no MCP servers, no `npm install`.
+**Zero dependencies.** The skills run entirely through Claude's native capabilities — reading diffs, understanding code, executing git commands. The only executable code is the safety guard hook and the CI validator (bash + Python stdlib, nothing to install).
 
 ---
 

@@ -66,7 +66,7 @@ If no commits ahead: "Nothing to PR." Stop. Show the outgoing commits (these bec
 
 If behind `$BASE`: warn — reviewers may see conflicts; recommend /smart-sync first (re-fetch after). Skip only on explicit confirmation.
 
-Then audit `git diff origin/$BASE..HEAD` in a single pass (same checks as safe-push): debug artifacts, conflict markers, secret patterns (`references/git-safety.md`), TODO/FIXME in new code, imports referencing files missing from the branch. If issues found, list them numbered and offer: **[f] Fix all  [s] Skip  [c] Cancel**.
+Then audit `git diff origin/$BASE..HEAD` in a single pass (same checks as safe-push): debug artifacts, conflict markers, secret patterns (`references/git-safety.md`), TODO/FIXME in new code, imports referencing files missing from the branch — and if the diff touches deploy configs, the deploy foot-guns from safe-push Check 6 (hardcoded host ports, `container_name:`, `:latest`; deeper analysis via `/deploy-check`). If issues found, list them numbered and offer: **[f] Fix all  [s] Skip  [c] Cancel**.
 
 ### Step 4: Conflict Dry-Run
 

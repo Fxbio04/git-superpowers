@@ -97,6 +97,9 @@ git rev-list --objects origin/<branch>..HEAD \
 
 Anything over 1 MB gets flagged; over 50 MB will be rejected by GitHub outright. For accidentally committed binaries, offer to remove them from the outgoing commits before pushing (and suggest Git LFS if they're intentional).
 
+**Check 6: Deploy Configs**
+Only when the outgoing diff touches deploy files (`docker-compose*`/`compose*.yml`, `Dockerfile`, k8s manifests, `.service`, `.env*`, proxy configs): scan the added lines for the foot-guns that crash shared VMs instead of CI — hardcoded host ports (`- "8080:80"`), `container_name:`, `image: …:latest`, host-path volumes, committed `.env` values. These collide with whatever is already running (or with another branch's deploy) at deploy time, not at build time. Flag with the concrete failure ("port 8080 → bind error if anything on the VM already claims it") and suggest `/deploy-check` for the cross-branch collision matrix and the infra-grade fixes.
+
 ### Step 3: Report and Fix
 
 If all checks pass:

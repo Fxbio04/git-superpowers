@@ -1,6 +1,7 @@
 ---
 name: topic-analyzer
 description: Analyze git changes and group files by logical topic using progressive detail (path → config → semantic). Returns structured JSON with topic groupings and mixed files.
+tools: Bash, Read, Grep, Glob
 ---
 
 # Topic Analyzer Agent

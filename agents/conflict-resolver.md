@@ -1,6 +1,7 @@
 ---
 name: conflict-resolver
 description: Analyze merge conflicts and produce a topic-aware resolution plan with severity ratings and concrete recommendations. Returns structured JSON.
+tools: Bash, Read, Grep, Glob
 ---
 
 # Conflict Resolver Agent

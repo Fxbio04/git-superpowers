@@ -124,8 +124,8 @@ Always suggest enabling rerere when a user resolves the same conflict pattern mo
 
 When rebase completes successfully:
 1. Verify the branch looks right: `git log --oneline -10`
-2. Check no conflict markers remain:
+2. Check no conflict markers remain — `git grep` only searches tracked files (skips node_modules, build output, .git) and respects the repo's ignore rules:
    ```bash
-   grep -rn "<<<<<<" . --exclude-dir=.git --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.py" --include="*.json" --include="*.yml" --include="*.yaml"
+   git grep -nE '^(<{7}|={7}|>{7})' -- ':!*.md'
    ```
 3. Run a quick build/test if available

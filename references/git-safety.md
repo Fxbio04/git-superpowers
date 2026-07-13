@@ -2,6 +2,8 @@
 
 Shared safety rules that apply to all git-superpowers skills.
 
+The most dangerous patterns (`git add .`, bare `--force`, `--no-verify`, force-pushing protected branches) are also blocked deterministically by the plugin's PreToolUse hook (`hooks/git-guard.sh`) — these rules explain the *why* and cover what a regex can't judge.
+
 ## Adaptive Output
 
 Adjust your verbosity and explanation depth to the user's apparent experience level:
@@ -33,8 +35,9 @@ Always check for these issues and act immediately when found:
 | Branch is >20 commits behind main | Suggest syncing before continuing work. |
 | File appears in multiple topics | Mark with ⚡. Use hunk-level handling. |
 | A forgotten stash exists | Remind the user with stash date and description. |
-| Last commit is a merge commit instead of rebase | Warn. Ask if this was intentional. |
-| Force push is needed | Always use `--force-with-lease`. Explain why this is safer. |
+| Last commit is a merge commit but the repo convention is rebase (see Workflow Conventions) | Warn. Ask if this was intentional. |
+| Force push is needed | Always `--force-with-lease --force-if-includes`. Explain why this is safer. |
+| Force push or history rewrite targets a protected branch | Refuse. See Protected Branches. |
 | Git history looks unusual (orphan commits, diverged branches) | Show what's happening. Ask before proceeding. |
 
 ## Staging Rules
@@ -46,15 +49,49 @@ Always check for these issues and act immediately when found:
 ## Push Rules
 
 - Always `git fetch origin` before pushing to check for remote changes
-- Always use `--force-with-lease` instead of `--force`
-- Only use `--force` with explicit user confirmation and an explanation of the risk
+- When force is needed: `git push --force-with-lease --force-if-includes` (git ≥ 2.30). Plain `--force-with-lease` has a trap: any `git fetch` (including background fetches by IDEs) updates the remote-tracking ref and "blesses" the lease — teammate commits fetched but never integrated get silently overwritten. `--force-if-includes` closes that gap by requiring their commits to be part of your history.
+- On git < 2.30, pin the lease explicitly: `--force-with-lease=<branch>:<expected-sha>`
+- Only use bare `--force` with explicit user confirmation and an explanation of the risk
+- Never bypass hooks: no `--no-verify`, no `-n` on commit/push. If a hook fails, fix the cause. If the user insists on bypassing, they must run that command themselves.
 - Before pushing, check what will go out: `git log --oneline origin/<branch>..HEAD`
+
+## Protected Branches
+
+Never rewrite history on protected or shared-by-convention branches — no force push, no rebase of published commits, no `reset --hard` followed by force push. This applies to:
+
+- The default branch (see Branch Detection)
+- `master`, `main`, `develop`, `dev`, `staging`, `production`, and `release/*`
+- Any branch protected on GitHub. When `gh` is available, check once per session:
+  ```bash
+  gh api "repos/{owner}/{repo}/branches/<branch>/protection" --jq .url 2>/dev/null
+  ```
+  HTTP 200 = protected (refuse rewrites), 404 = not protected, other errors = unknown (fall back to the name list).
+
+If the user asks for a history rewrite on such a branch: refuse, explain why (teammates' clones break, CI reruns, open PRs invalidated), and offer `git revert` as the safe alternative. Do not offer an override — the user can run the command manually if they truly mean it.
+
+## Shared Branch Detection
+
+Before rewriting history on ANY branch, check whether others work on it:
+
+```bash
+git log origin/<branch> --format='%ae' | sort -u
+```
+
+More than one author email (ignoring bot addresses) → treat the branch as shared: warn that a force push rewrites teammates' history, recommend coordinating first, and require explicit confirmation naming the risk. One author (the user) → proceed with the normal force-with-lease rules.
+
+## Workflow Conventions
+
+Adapt to the repo instead of imposing preferences:
+
+- **Merge vs. rebase:** `git log --merges --first-parent -20 --oneline origin/<default-branch>` — many merge commits means the team merges; don't flag merge commits as mistakes and offer `git merge` where the skill would default to rebase. `.claude-git.yml` may pin this via `workflow: rebase|merge`.
+- **Commit style:** Look at `git log --oneline -20`. If the repo doesn't use Conventional Commits, match the existing style instead.
+- **PR template:** If `.github/PULL_REQUEST_TEMPLATE.md` exists, PR bodies must follow it.
 
 ## Commit Rules
 
 - Always show the proposed commit message and get user confirmation
-- Use Conventional Commits format (feat, fix, refactor, chore, style, docs)
-- On pre-commit hook failure: fix the issue and create a NEW commit — never `--amend`
+- Default to Conventional Commits format (feat, fix, refactor, chore, style, docs) unless the repo's history uses a different style — see Workflow Conventions
+- If a pre-commit hook fails, no commit was created — fix the cause and run `git commit` again (never `--no-verify`). If hooks auto-modified files, re-stage those files and commit again. Never `--amend` a commit that might already be pushed.
 - Always append: `Co-Authored-By: Claude <noreply@anthropic.com>`
 
 ## Destructive Operation Safety
